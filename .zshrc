@@ -189,6 +189,18 @@ alias gs="git status"
 alias gc="git commit"
 alias ga="git add ."
 alias gp="git push origin main"
+alias v="nvim"
+alias py="python3"
+alias c="clear"
+
+# script aliases
+alias llm="python3 ~/scripts/llm.py"
+# pipe it with a command to copy the output of a command to system clipboard
+# echo 123 | copy
+# copy main.c copies complete file to system clipboard
+alias copy="xclip -sel clip"
 
 
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
+
+# just testing rsync
