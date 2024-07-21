@@ -203,4 +203,4 @@ alias copy="xclip -sel clip"
 
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
 
-# just testing rsync
+# just testing rsync via the script
