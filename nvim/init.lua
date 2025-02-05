@@ -1,51 +1,107 @@
--- Set <space> as the leader key
 vim.g.mapleader = ' '
-vim.g.maplocalleader = ' '
+vim.keymap.set('n', [[<leader>w]], [[:w<cr>]], {noremap=true})
+vim.keymap.set('n', [[<leader>q]], [[:q<cr>]], {noremap=true})
+vim.keymap.set('n', [[<leader>h]], [[<c-w>h]], {noremap=true})
+vim.keymap.set('n', [[<leader>j]], [[<c-w>j]], {noremap=true})
+vim.keymap.set('n', [[<leader>k]], [[<c-w>k]], {noremap=true})
+vim.keymap.set('n', [[<leader>l]], [[<c-w>l]], {noremap=true})
+vim.keymap.set('n', [[<leader>e]], [[:e ]], {noremap=true})
+vim.keymap.set('n', [[<leader>s]], [[:! ]], {noremap=true})
+vim.keymap.set('n', [[<leader>t]], [[<C-6>]], {noremap=true})
+vim.keymap.set('n', '<leader>m', ':Marks<CR>', { noremap = true, silent = true })
 
--- Set to true if you have a Nerd Font installed
-vim.g.have_nerd_font = false
 
--- Configuration options
-vim.opt.number = true
-vim.opt.relativenumber = true
-vim.opt.mouse = 'a'
-vim.opt.showmode = false
-vim.opt.clipboard = 'unnamedplus' -- Sync clipboard
-vim.opt.breakindent = true
-vim.opt.undofile = true
-vim.opt.ignorecase = true
-vim.opt.smartcase = true
-vim.opt.signcolumn = 'yes'
-vim.opt.updatetime = 250
-vim.opt.timeoutlen = 300
-vim.opt.splitright = true
-vim.opt.splitbelow = true
-vim.opt.list = true
-vim.opt.listchars = { tab = '» ', trail = '·', nbsp = '␣' }
-vim.opt.inccommand = 'split'
-vim.opt.cursorline = true
-vim.opt.scrolloff = 10
 
--- Basic Keymaps
+
+-- Map <leader>f to fuzzy-search
+vim.api.nvim_set_keymap('n', '<leader>f', ':Files<CR>', { noremap = true, silent = true })
+-- Map <leader>g to fuzzy-grep
+vim.api.nvim_set_keymap('n', '<leader>g', ':Rg<CR>', { noremap = true, silent = true })
+vim.api.nvim_set_keymap('n', '<M-u>', '<C-u>zz', { noremap = true, silent = true })
+vim.api.nvim_set_keymap('n', '<M-d>', '<C-d>zz', { noremap = true, silent = true })
+
 
 vim.opt.hlsearch = true
 vim.keymap.set('n', '<Esc>', '<cmd>nohlsearch<CR>')
 
-vim.keymap.set('n', '[d', vim.diagnostic.goto_prev) -- Go to previous diagnostic message
-vim.keymap.set('n', ']d', vim.diagnostic.goto_next) -- Go to next diagnostic message
-vim.keymap.set('n', '<leader>e', vim.diagnostic.open_float) -- Show diagnostic error messages
-vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist) -- Open diagnostic quickfix list
 
--- File tree with leader+e shortcut
-vim.api.nvim_set_keymap('n', '<leader>e', '<cmd>:Neotree float<CR>', {})
-vim.keymap.set('t', '<Esc><Esc>', '<C-\\><C-n>') -- Exit terminal mode
+require('paq') {
+    'savq/paq-nvim';
+    --'rebelot/kanagawa.nvim';
+    'justinmk/vim-dirvish';
+  'ishan9299/modus-theme-vim';
+    'sainnhe/gruvbox-material';
+    'windwp/nvim-autopairs';
+    'FabijanZulj/blame.nvim';
+    { 'nvim-treesitter/nvim-treesitter', build = ':TSUpdate' },
+    'junegunn/fzf.vim';
+    'junegunn/fzf';
+    'neovim/nvim-lspconfig';
+    'hrsh7th/cmp-nvim-lsp';
+    'hrsh7th/cmp-buffer';
+    'hrsh7th/cmp-path';
+    'hrsh7th/cmp-cmdline';
+    'hrsh7th/nvim-cmp';
+    'hrsh7th/cmp-vsnip';
+    'hrsh7th/vim-vsnip';
+}
+--MODUS <HIGH BACKGROUND AND FOREGROUND CONSTRAST>
+vim.cmd('colorscheme modus-vivendi') -- Dark
+-- or
+--vim.cmd('colorscheme modus-operandi') -- Light
 
--- Easier split navigation with CTRL+<hjkl>
-vim.keymap.set('n', '<C-h>', '<C-w><C-h>') -- Move focus left window
-vim.keymap.set('n', '<C-l>', '<C-w><C-l>') -- Move focus right window
-vim.keymap.set('n', '<C-j>', '<C-w><C-j>') -- Move focus lower window
-vim.keymap.set('n', '<C-k>', '<C-w><C-k>') -- Move focus upper window
+--GRUVBOX<AESTHETIC>
+-- vim.cmd [[set termguicolors]]
+-- vim.g.gruvbox_material_better_performance = true
+-- vim.g.gruvbox_material_enable_italic = true
+-- vim.g.gruvbox_material_enable_bold = true
+-- vim.g.gruvbox_material_background = 'hard'
+-- vim.g.gruvbox_material_foreground = 'material'
+-- vim.g.gruvbox_material_dim_inactive_windows = 0
+-- vim.g.gruvbox_material_menu_selection_background = 'green'
+-- vim.g.gruvbox_material_ui_contrast = 'high'
+-- vim.g.gruvbox_material_transparent_background = 2
+-- vim.cmd [[colorscheme gruvbox-material]]
 
+require('nvim-autopairs').setup()
+require('blame').setup({})
+require('nvim-treesitter.configs').setup {
+    highlight = {enable = true}
+}
+
+vim.cmd [[highlight ExtraWhitespace ctermbg=grey guibg=grey]] -- highlight trailing whitespace
+vim.cmd [[hi StatusLine ctermbg=Cyan ctermfg=Red]]
+vim.cmd [[match ExtraWhitespace /\s\+$/]]
+-- vim.cmd [[set cmdheight=0]]
+
+--netrw  settings
+--vim.g.netrw_liststyle = 3
+--vim.g.netrw_keepdir = 0
+--vim.g.netrw_banner = 0
+--vim.g.netrw_fastbrowse = 0
+
+-- search must be case insensitive
+vim.opt.ignorecase = true
+vim.opt.smartcase = true
+
+vim.opt.title = true
+vim.opt.number = true
+vim.opt.relativenumber = true
+vim.opt.clipboard = 'unnamedplus'
+vim.opt.cursorline = true
+vim.opt.cursorlineopt = 'number'
+-- vim.opt.colorcolumn = '81'
+vim.opt.splitbelow = true
+vim.opt.splitright = true
+vim.opt.undofile = true
+vim.opt.laststatus = 2
+vim.opt.cursorline = true
+vim.opt.tabstop = 4
+vim.opt.shiftwidth = 4
+vim.opt.softtabstop = 4
+vim.opt.expandtab = true
+
+-- Customizations
 -- Highlight yanked text
 vim.api.nvim_create_autocmd('TextYankPost', {
   desc = 'Highlight yanked text',
@@ -53,28 +109,47 @@ vim.api.nvim_create_autocmd('TextYankPost', {
     vim.highlight.on_yank()
   end,
 })
+-- LSP
+ local lspconfig = require('lspconfig')
 
--- Install lazy.nvim plugin manager
-local lazypath = vim.fn.stdpath 'data' .. '/lazy/lazy.nvim'
-if not vim.loop.fs_stat(lazypath) then
-  local lazyrepo = 'https://github.com/folke/lazy.nvim.git'
-  vim.fn.system { 'git', 'clone', '--filter=blob:none', '--branch=stable', lazyrepo, lazypath }
-end
-vim.opt.rtp:prepend(lazypath)
-
--- Configure and install plugins
--- all plugins are returned by plugins.lua file
-require('lazy').setup 'plugins'
-
--- Customizations
--- Relative line numbers as white
-function LineNumberColors()
-  vim.api.nvim_set_hl(0, 'LineNrAbove', { fg = '#FFFFFF' })
-  vim.api.nvim_set_hl(0, 'LineNrBelow', { fg = '#FFFFFF' })
+-- Minimal on_attach function (removes unnecessary overhead)
+local on_attach = function(client, bufnr)
+  local opts = { noremap=true, silent=true, buffer=bufnr }
+  -- Keybindings for LSP (Only essential ones)
+  vim.keymap.set("n", "gd", vim.lsp.buf.definition, opts)
+  vim.keymap.set("n", "K", vim.lsp.buf.hover, opts)
 end
 
-LineNumberColors()
+-- Capabilities for better completion performance
+local capabilities = require('cmp_nvim_lsp').default_capabilities()
 
--- Comments with green color
-vim.api.nvim_set_hl(0, 'Comment', { fg = '#ACEE2A' })
-vim.api.nvim_set_hl(0, '@comment', { link = 'Comment' })
+-- Optimized Pyright (Python LSP)
+lspconfig.pyright.setup({
+  on_attach = on_attach,
+  capabilities = capabilities,
+  settings = {
+    python = {
+      analysis = {
+        autoSearchPaths = true,
+        diagnosticMode = "openFilesOnly", -- Only analyze open files for performance
+        useLibraryCodeForTypes = false, -- Reduces processing for type inference
+      },
+    },
+  },
+})
+
+-- Optimized Clangd (C/C++ LSP)
+lspconfig.clangd.setup({
+  cmd = { "clangd", "--background-index", "--clang-tidy", "--completion-style=detailed", "--header-insertion=never" },
+  on_attach = on_attach,
+  capabilities = capabilities,
+  init_options = {
+    clangdFileStatus = false,  -- Disables workspace symbol indexing for speed
+    fallbackFlags = { "-std=c++17" },
+  },
+})
+
+
+-- enable lsp at the end so i still get to use nvim with my preferences if lsp errors out on me
+require('lsp')
+require('fzf_config')

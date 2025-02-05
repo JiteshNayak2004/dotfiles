@@ -1,190 +1,109 @@
-# Enable Powerlevel10k instant prompt. Should stay close to the top of ~/.zshrc.
-# Initialization code that may require console input (password prompts, [y/n]
-# confirmations, etc.) must go above this block; everything else may go below.
+# Enable Powerlevel10k instant prompt
 if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
   source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
 fi
 
-# If you come from bash you might have to change your $PATH. 
-
-
-# Path to your oh-my-zsh installation.
+# Oh My Zsh configuration
 export ZSH="$HOME/.oh-my-zsh"
-
-
-# Set name of the theme to load --- if set to "random", it will
-# load a random theme each time oh-my-zsh is loaded, in which case,
-# to know which specific one was loaded, run: echo $RANDOM_THEME
-# See https://github.com/ohmyzsh/ohmyzsh/wiki/Themes
-export PATH=/path/to/riscv/compiler:$PATH
 ZSH_THEME="robbyrussell"
+
+# Old Colorscheme - Previous Scheme
+# POWERLEVEL9K_MODE="nerdfont-complete"
+# POWERLEVEL9K_LEFT_PROMPT_ELEMENTS=(os_icon context dir newline status)
+# POWERLEVEL9K_RIGHT_PROMPT_ELEMENTS=(vcs)
+# POWERLEVEL9K_SHOW_CHANGESET=true
+# POWERLEVEL9K_SHORTEN_DIR_LENGTH=1
+
+# Modus Light Colorscheme (Commented)
+# POWERLEVEL9K_MODE="nerdfont-complete"
+# POWERLEVEL9K_LEFT_PROMPT_ELEMENTS=(os_icon context dir newline status)
+# POWERLEVEL9K_RIGHT_PROMPT_ELEMENTS=(vcs)
+# POWERLEVEL9K_SHOW_CHANGESET=true
+# POWERLEVEL9K_SHORTEN_DIR_LENGTH=2
+# POWERLEVEL9K_COLOR_SCHEME="light"
+
+# Modus Dark Colorscheme (Active)
 POWERLEVEL9K_MODE="nerdfont-complete"
 POWERLEVEL9K_LEFT_PROMPT_ELEMENTS=(os_icon context dir newline status)
-POWERLEVEL9K_OS_ICON_BACKGROUND=024 #navyblue
-POWERLEVEL9K_OS_ICON_FOREGROUND=202 #orangered1
-
-POWERLEVEL9K_CONTEXT_TEMPLATE='%n'
-POWERLEVEL9K_CONTEXT_DEFAULT_FOREGROUND=249 # white
-
-POWERLEVEL9K_DIR_HOME_FOREGROUND=249
-POWERLEVEL9K_DIR_HOME_SUBFOLDER_FOREGROUND=249
-POWERLEVEL9K_DIR_ETC_FOREGROUND=249
-POWERLEVEL9K_DIR_DEFAULT_FOREGROUND=249
-POWERLEVEL9K_DIR_HOME_BACKGROUND=024 #deepskyblue4a
-POWERLEVEL9K_DIR_HOME_SUBFOLDER_BACKGROUND=024 #deepskyblue4a
-
-POWERLEVEL9K_DIR_ETC_BACKGROUND=024 #deepskyblue4a
-POWERLEVEL9K_DIR_DEFAULT_BACKGROUND=024 #deepskyblue4a
-POWERLEVEL9K_SHORTEN_DIR_LENGTH=1
-POWERLEVEL9K_HOME_ICON=''
-POWERLEVEL9K_HOME_SUB_ICON=''
-#POWERLEVEL9K_FOLDER_ICON=''
-POWERLEVEL9K_STATUS_VERBOSE=true
-POWERLEVEL9K_STATUS_CROSS=true
-POWERLEVEL9K_STATUS_OK_BACKGROUND=017
-POWERLEVEL9K_STATUS_ERROR_BACKGROUND=017
-POWERLEVEL9K_RIGHT_PROMPT_ELEMENTS=(vcs)
-POWERLEVEL9K_VCS_CLEAN_FOREGROUND=017 # navyblue
-POWERLEVEL9K_VCS_CLEAN_BACKGROUND=040 # green3a
-POWERLEVEL9K_VCS_UNTRACKED_FOREGROUND=017 # navyblue
-POWERLEVEL9K_VCS_UNTRACKED_BACKGROUND=220 # gold1
-POWERLEVEL9K_VCS_MODIFIED_FOREGROUND=236 #grey19
-POWERLEVEL9K_VCS_MODIFIED_BACKGROUND=160 #red3a
+POWERLEVEL9K_RIGHT_PROMPT_ELEMENTS=(vcs virtualenv)
 POWERLEVEL9K_SHOW_CHANGESET=true
-plugins=(git)
-source $ZSH/oh-my-zsh.sh
+POWERLEVEL9K_SHORTEN_DIR_LENGTH=2
+POWERLEVEL9K_COLOR_SCHEME="dark"
 
-
-# Set list of themes to pick from when loading at random
-# Setting this variable when ZSH_THEME=random will cause zsh to load
-# a theme from this variable instead of looking in $ZSH/themes/
-# If set to an empty array, this variable will have no effect.
-# ZSH_THEME_RANDOM_CANDIDATES=( "robbyrussell" "agnoster" )
-
-# Uncomment the following line to use case-sensitive completion.
-# CASE_SENSITIVE="true"
-
-# Uncomment the following line to use hyphen-insensitive completion.
-# Case-sensitive completion must be off. _ and - will be interchangeable.
-# HYPHEN_INSENSITIVE="true"
-
-# Uncomment one of the following lines to change the auto-update behavior
-# zstyle ':omz:update' mode disabled  # disable automatic updates
-# zstyle ':omz:update' mode auto      # update automatically without asking
-# zstyle ':omz:update' mode reminder  # just remind me to update when it's time
-
-# Uncomment the following line to change how often to auto-update (in days).
-# zstyle ':omz:update' frequency 13
-
-# Uncomment the following line if pasting URLs and other text is messed up.
-# DISABLE_MAGIC_FUNCTIONS="true"
-
-# Uncomment the following line to disable colors in ls.
-# DISABLE_LS_COLORS="true"
-
-# Uncomment the following line to disable auto-setting terminal title.
-# DISABLE_AUTO_TITLE="true"
-
-# Uncomment the following line to enable command auto-correction.
-# ENABLE_CORRECTION="true"
-
-# Uncomment the following line to display red dots whilst waiting for completion.
-# You can also set it to another string to have that shown instead of the default red dots.
-# e.g. COMPLETION_WAITING_DOTS="%F{yellow}waiting...%f"
-# Caution: this setting can cause issues with multiline prompts in zsh < 5.7.1 (see #5765)
-# COMPLETION_WAITING_DOTS="true"
-
-# Uncomment the following line if you want to disable marking untracked files
-# under VCS as dirty. This makes repository status check for large repositories
-# much, much faster.
-# DISABLE_UNTRACKED_FILES_DIRTY="true"
-
-# Uncomment the following line if you want to change the command execution time
-# stamp shown in the history command output.
-# You can set one of the optional three formats:
-# "mm/dd/yyyy"|"dd.mm.yyyy"|"yyyy-mm-dd"
-# or set a custom format using the strftime function format specifications,
-# see 'man strftime' for details.
-# HIST_STAMPS="mm/dd/yyyy"
-
-# Would you like to use another custom folder than $ZSH/custom?
-# ZSH_CUSTOM=/path/to/new-custom-folder
-
-# Which plugins would you like to load?
-# Stanqdard plugins can be found in $ZSH/plugins/
-# Custom plugins may be added to $ZSH_CUSTOM/plugins/
-# Example format: plugins=(rails git textmate ruby lighthouse)
-# Add wisely, as too many plugins slow down shell startup.
-plugins=(
-	git
-	zsh-syntax-highlighting
-	zsh-autosuggestions
-
-)
-
-source $ZSH/oh-my-zsh.sh
-
-# User configuration
-
-# export MANPATH="/usr/local/man:$MANPATH"
-
-# You may need to manually set your language environment
-# export LANG=en_US.UTF-8
-
-# Preferred editor for local and remote sessions
-# if [[ -n $SSH_CONNECTION ]]; then
-#   export EDITOR='vim'
-# else
-#   export EDITOR='mvim'
-# fi
-
-# Compilation flags
-# export ARCHFLAGS="-arch x86_64"
-
-# Set personal aliases, overriding those provided by oh-my-zsh libs,
-# plugins, and themes. Aliases can be placed here, though oh-my-zsh
-# users are encouraged to define aliases within the ZSH_CUSTOM folder.
-# For a full list of active aliases, run `alias`.
-#
-# Example aliases
-# alias zshconfig="mate ~/.zshrc"
-# alias ohmyzsh="mate ~/.oh-my-zsh"
 source ~/applications/powerlevel10k/powerlevel10k.zsh-theme
 
-# risc-v compiler
+# Plugins
+plugins=(
+  git
+  virtualenv
+  zsh-syntax-highlighting
+  zsh-autosuggestions
+)
+source $ZSH/oh-my-zsh.sh
 
-export PATH="$PATH:/home/jitesh/riscv_toolchain/riscv64-unknown-elf-gcc-8.3.0-2019.08.0-x86_64-linux-ubuntu14/bin"
-
-# verilog compiler 
+# Environment variables
+export PATH="$PATH:/home/jitesh/binaries/risc32_install/bin"
+export PATH="$PATH:/home/jitesh/Desktop/work/incore/misc/bsc/bsc_install/bin"
 export PATH="$PATH:/usr/bin/iverilog"
-
-#waveform viewer surfer
+export PATH="$PATH:/home/jitesh/Desktop/work/incore/bsc/inst/bin"
 export PATH="$PATH:/home/jitesh/binaries"
-
-# To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
-[[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
-
-#systemverilog compiler
 export PATH="$PATH:/usr/bin/verilator"
-
-# creates an index file of all headers some dependecy isliye dhaal rakha hei
 export PATH="$PATH:/usr/local/bin/ctags"
-
-#fd alternative to find
+export PATH="$PATH:/opt/nvim-linux64/bin"
 export PATH="$PATH:/home/jitesh/.local/bin"
-
-#questasim stuff
-export LM_LICENSE_FILE="/home/jitesh/applications/MentorGraphics_QuestaSim/install/license.dat"
 export PATH="$PATH:/home/jitesh/applications/MentorGraphics_QuestaSim/install/questasim/linux_x86_64"
+export LM_LICENSE_FILE="/home/jitesh/applications/MentorGraphics_QuestaSim/install/license.dat"
 
-# zoxide <a better cd alternative apparently>
+# Vim mode in Zsh
+bindkey -v
+export KEYTIMEOUT=1
+
+# Zoxide initialization
 eval "$(zoxide init zsh)"
 
-# vim bindings to move thru command history and autocomplete
-zle -N accept-current-completion  # Correct
-bindkey '^l' autosuggest-accept # mapping alt+l for autocomplete
-#aliases
+# Key bindings
+zle -N accept-current-completion
+bindkey '^l' autosuggest-accept
+# fuzzy file search 
 
+# Aliases
+# tmux
+alias tn='tmux -u  new -s'
+alias tls='tmux -u ls'
+alias ta='tmux -u attach -t'
+alias tk='tmux -u kill-session -t'
+alias t='tmux -u'
+# virtual Environment
+export pyvirtualenv=~/pyvirtualenv
+# Create a virtual environment
+makevenv() {
+    python3 -m venv "$pyvirtualenv/$1"
+    echo "Virtual environment '$1' created at $pyvirtualenv/$1"
+}
+
+# Activate a virtual environment
+activate() {
+    if [ ! -d "$pyvirtualenv/$1" ]; then
+        echo "Error: Virtual environment '$1' does not exist."
+        return 1
+    fi
+    source "$pyvirtualenv/$1/bin/activate"
+}
+
+# Remove a virtual environment
+rmvenv() {
+    if [ ! -d "$pyvirtualenv/$1" ]; then
+        echo "Error: Virtual environment '$1' does not exist."
+        return 1
+    fi
+    rm -rf "$pyvirtualenv/$1"
+    echo "Virtual environment '$1' removed."
+}
+# List all virtual environments
+alias lsvenv="ls -1 $pyvirtualenv"
+
+# basic stuff
+alias sl="ls"
 alias gs="git status"
 alias gc="git commit"
 alias ga="git add ."
@@ -192,15 +111,37 @@ alias gp="git push origin main"
 alias v="nvim"
 alias py="python3"
 alias c="clear"
-
-# script aliases
+alias scratchpad="nvim ~/scratchpad"
+alias rm="rm -ir"
 alias llm="python3 ~/scripts/llm.py"
-# pipe it with a command to copy the output of a command to system clipboard
-# echo 123 | copy
-# copy main.c copies complete file to system clipboard
 alias copy="xclip -sel clip"
+alias displaymanager="sudo vim /etc/gdm3/custom.conf"
 
+# Conditional prompt customization
+[[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
 
-[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
+# vi mode
+bindkey -v
+export KEYTIMEOUT=1
 
-# just testing rsync via the script
+# Change cursor shape for different vi modes.
+function zle-keymap-select {
+  if [[ ${KEYMAP} == vicmd ]] ||
+     [[ $1 = 'block' ]]; then
+    echo -ne '\e[1 q'
+  elif [[ ${KEYMAP} == main ]] ||
+       [[ ${KEYMAP} == viins ]] ||
+       [[ ${KEYMAP} = '' ]] ||
+       [[ $1 = 'beam' ]]; then
+    echo -ne '\e[5 q'
+  fi
+}
+zle -N zle-keymap-select
+zle-line-init() {
+    zle -K viins # initiate `vi insert` as keymap (can be removed if `bindkey -V` has been set elsewhere)
+    echo -ne "\e[5 q"
+}
+zle -N zle-line-init
+echo -ne '\e[5 q' # Use beam shape cursor on startup.
+preexec() { echo -ne '\e[5 q' ;} # Use beam shape cursor for each new prompt.
+
