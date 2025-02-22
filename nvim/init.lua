@@ -28,13 +28,16 @@ vim.keymap.set('n', '<Esc>', '<cmd>nohlsearch<CR>')
 require('paq') {
     'savq/paq-nvim';
     --'rebelot/kanagawa.nvim';
-    'justinmk/vim-dirvish';
   'ishan9299/modus-theme-vim';
     'sainnhe/gruvbox-material';
     'windwp/nvim-autopairs';
     'FabijanZulj/blame.nvim';
+    'sindrets/diffview.nvim';
     { 'nvim-treesitter/nvim-treesitter', build = ':TSUpdate' },
     'junegunn/fzf.vim';
+    'NeogitOrg/neogit';
+    -- plenary needed for neogit
+    'nvim-lua/plenary.nvim';
     'junegunn/fzf';
     'neovim/nvim-lspconfig';
     'hrsh7th/cmp-nvim-lsp';
@@ -44,6 +47,12 @@ require('paq') {
     'hrsh7th/nvim-cmp';
     'hrsh7th/cmp-vsnip';
     'hrsh7th/vim-vsnip';
+    'tpope/vim-fugitive';
+    -- below two plugins help in navigating directories
+    'justinmk/vim-dirvish';
+    -- dovish dependency trash <to delete files/folders>
+    'roginfarrer/vim-dirvish-dovish';
+    'lukas-reineke/indent-blankline.nvim';
 }
 --MODUS <HIGH BACKGROUND AND FOREGROUND CONSTRAST>
 vim.cmd('colorscheme modus-vivendi') -- Dark
@@ -68,6 +77,21 @@ require('blame').setup({})
 require('nvim-treesitter.configs').setup {
     highlight = {enable = true}
 }
+require('neogit').setup({
+  disable_hint = true,  -- Disable hints for speed
+  disable_insert_on_commit = false,  -- Keep commit behavior like Fugitive
+  disable_context_highlighting = true,  -- Avoid unnecessary UI clutter
+  commit_popup = { kind = "split" },  -- Show commit popup in a split
+  signs = {
+    section = { "", "" },  -- Remove section indicators
+    item = { "", "" },  -- Remove item indicators
+    hunk = { "", "" },  -- Remove hunk indicators
+  },
+  integrations = { diffview = false },  -- Keep Neogit simple
+  mappings = { status = { ["q"] = "Close" } },  -- Allow quick quit like Fugitive
+})
+-- this if for indent lines for python files
+require("ibl").setup()
 
 vim.cmd [[highlight ExtraWhitespace ctermbg=grey guibg=grey]] -- highlight trailing whitespace
 vim.cmd [[hi StatusLine ctermbg=Cyan ctermfg=Red]]
@@ -75,15 +99,22 @@ vim.cmd [[match ExtraWhitespace /\s\+$/]]
 -- vim.cmd [[set cmdheight=0]]
 
 --netrw  settings
---vim.g.netrw_liststyle = 3
---vim.g.netrw_keepdir = 0
---vim.g.netrw_banner = 0
---vim.g.netrw_fastbrowse = 0
+-- use vim-dirvish to traverse thru file-history
+-- use a for new file,A for new-dir,r for rename,dd for delete
+-- advanced commands use :! command and then % to point to the
+-- current buffer path and can then use tab to address the file
+vim.g.netrw_liststyle = 0
+vim.g.netrw_keepdir = 0
+vim.g.netrw_banner = 0
+vim.g.netrw_fastbrowse = 0
+
+-- fzf settings
+--vim.g.fzf_layout = { down = '40%' }
+--vim.g.fzf_vim.preview_window = { "right,40%", "ctrl-/" }
 
 -- search must be case insensitive
 vim.opt.ignorecase = true
 vim.opt.smartcase = true
-
 vim.opt.title = true
 vim.opt.number = true
 vim.opt.relativenumber = true
@@ -109,6 +140,11 @@ vim.api.nvim_create_autocmd('TextYankPost', {
     vim.highlight.on_yank()
   end,
 })
+-- dotfiles access command
+vim.cmd("command! Vimconf :e ~/.config/nvim/init.lua")
+-- Todo access command
+vim.cmd("command! Todo :e ~/.Todo.txt")
+
 -- LSP
  local lspconfig = require('lspconfig')
 
