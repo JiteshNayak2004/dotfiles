@@ -2,11 +2,11 @@ local lspconfig = require('lspconfig')
 local capabilities = require('cmp_nvim_lsp').default_capabilities()
 local cmp = require('cmp')
 
+-- Enhanced on_attach function with all your keybindings
 local on_attach = function(client, bufnr)
     local bufopts = {noremap=true, silent=true, buffer=bufnr}
     vim.keymap.set('n', 'gD', vim.lsp.buf.declaration, bufopts)
     vim.keymap.set('n', 'gd', vim.lsp.buf.definition, bufopts)
-    vim.keymap.set('n', 'go', '<c-t>', bufopts)
     vim.keymap.set('n', 'K', vim.lsp.buf.hover, bufopts)
     vim.keymap.set('n', 'gi', vim.lsp.buf.implementation, bufopts)
     vim.keymap.set('n', '<C-k>', vim.lsp.buf.signature_help, bufopts)
@@ -15,17 +15,10 @@ local on_attach = function(client, bufnr)
     vim.keymap.set('n', '<space>ca', vim.lsp.buf.code_action, bufopts)
     vim.keymap.set('n', 'gr', vim.lsp.buf.references, bufopts)
     vim.keymap.set('n', '<space>p', vim.lsp.buf.format, bufopts)
-    vim.keymap.set('n', 'gl', vim.diagnostic.open_float, bufopts)
+
 end
 
-local servers = {}
-for _, server in ipairs(servers) do
-    lspconfig[server].setup {
-        on_attach = on_attach,
-        capabilities = capabilities,
-    }
-end
-
+-- Helper functions for completion
 local has_words_before = function()
     unpack = unpack or table.unpack
     local line, col = unpack(vim.api.nvim_win_get_cursor(0))
@@ -36,6 +29,7 @@ local feedkey = function(key, mode)
     vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes(key, true, true, true), mode, true)
 end
 
+-- Completion setup
 cmp.setup({
     snippet = {
         expand = function(args)
@@ -73,18 +67,31 @@ cmp.setup({
     }),
 })
 
--- cmp.setup.cmdline({ '/', '?' }, {
---     mapping = cmp.mapping.preset.cmdline(),
---     sources = {
---         { name = 'buffer' },
---     }
--- })
--- 
--- cmp.setup.cmdline(':', {
---     mapping = cmp.mapping.preset.cmdline(),
---     sources = cmp.config.sources({
---         { name = 'path' },
---     }, {
---         { name = 'cmdline' },
---     })
--- })
+-- Optimized Pyright (Python LSP)
+lspconfig.pyright.setup({
+  on_attach = on_attach,
+  capabilities = capabilities,
+  settings = {
+    python = {
+      analysis = {
+        autoSearchPaths = true,
+        diagnosticMode = "openFilesOnly", -- Only analyze open files for performance
+        useLibraryCodeForTypes = false, -- Reduces processing for type inference
+      },
+    },
+  },
+})
+
+-- Optimized Clangd (C/C++ LSP)
+lspconfig.clangd.setup({
+  cmd = { "clangd", "--background-index", "--clang-tidy", "--completion-style=detailed", "--header-insertion=never" },
+  on_attach = on_attach,
+  capabilities = capabilities,
+  init_options = {
+    clangdFileStatus = false,  -- Disables workspace symbol indexing for speed
+    fallbackFlags = { "-std=c++17" },
+  },
+})
+
+-- Add any other LSP servers you need here
+-- This ensures LSP is loaded at the end so you can still use nvim even if LSP has errors
