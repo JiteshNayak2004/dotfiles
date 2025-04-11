@@ -167,47 +167,6 @@ vim.api.nvim_create_user_command('Stripws', function()
   vim.cmd('g/^[[:space:]]*$/d')
 end, { desc = 'Remove empty and whitespace-only lines' })
 
--- -- LSP
---  local lspconfig = require('lspconfig')
---
--- -- Minimal on_attach function (removes unnecessary overhead)
--- local on_attach = function(client, bufnr)
---   local opts = { noremap=true, silent=true, buffer=bufnr }
---   -- Keybindings for LSP (Only essential ones)
---   vim.keymap.set("n", "gd", vim.lsp.buf.definition, opts)
---   vim.keymap.set("n", "K", vim.lsp.buf.hover, opts)
--- end
---
--- -- Capabilities for better completion performance
--- local capabilities = require('cmp_nvim_lsp').default_capabilities()
---
--- -- Optimized Pyright (Python LSP)
--- lspconfig.pyright.setup({
---   on_attach = on_attach,
---   capabilities = capabilities,
---   settings = {
---     python = {
---       analysis = {
---         autoSearchPaths = true,
---         diagnosticMode = "openFilesOnly", -- Only analyze open files for performance
---         useLibraryCodeForTypes = false, -- Reduces processing for type inference
---       },
---     },
---   },
--- })
---
--- -- Optimized Clangd (C/C++ LSP)
--- lspconfig.clangd.setup({
---   cmd = { "clangd", "--background-index", "--clang-tidy", "--completion-style=detailed", "--header-insertion=never" },
---   on_attach = on_attach,
---   capabilities = capabilities,
---   init_options = {
---     clangdFileStatus = false,  -- Disables workspace symbol indexing for speed
---     fallbackFlags = { "-std=c++17" },
---   },
--- })
---
---
 -- enable lsp at the end so i still get to use nvim with my preferences if lsp errors out on me
 require('lsp')
 require('fzf_config')

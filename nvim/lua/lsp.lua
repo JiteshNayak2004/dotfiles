@@ -15,6 +15,45 @@ local on_attach = function(client, bufnr)
     vim.keymap.set('n', '<space>ca', vim.lsp.buf.code_action, bufopts)
     vim.keymap.set('n', 'gr', vim.lsp.buf.references, bufopts)
     vim.keymap.set('n', '<space>p', vim.lsp.buf.format, bufopts)
+    vim.keymap.set("n", "<leader>o", function()
+      local params = { textDocument = vim.lsp.util.make_text_document_params() }
+      vim.lsp.buf_request(0, 'textDocument/documentSymbol', params, function(err, result, ctx, _)
+        if err or not result then return end
+
+        local items = vim.lsp.util.symbols_to_items(result, 0) or {}
+        local fzf_items = {}
+
+        for _, item in ipairs(items) do
+          local kind = vim.lsp.protocol.SymbolKind[item.kind] or "?"
+          local display = string.format("%s [%s]", item.text, kind)
+          table.insert(fzf_items, { display = display, location = item })
+        end
+
+        vim.fn['fzf#run']({
+          source = vim.tbl_map(function(i) return i.display end, fzf_items),
+          sink = function(selected)
+            for _, entry in ipairs(fzf_items) do
+              if entry.display == selected then
+                local loc = entry.location
+                vim.cmd("e " .. loc.filename)
+                vim.fn.cursor(loc.lnum, loc.col)
+                break
+              end
+            end
+          end,
+          options = "--prompt='Symbols> ' --ansi --reverse --border",
+          window = {
+            width = 1,
+            height = 0.4,
+            yoffset = 1.0,
+            xoffset = 0.5,
+            border = 'sharp',
+          },
+        })
+      end)
+    end, { desc = "Fuzzy LSP document symbols (clean) with fzf" })
+
+    vim.keymap.set("n", "<leader>ws", vim.lsp.buf.workspace_symbol, bufopts)
 
 end
 
