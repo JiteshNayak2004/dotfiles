@@ -5,11 +5,9 @@ local cmp = require('cmp')
 -- Enhanced on_attach function with all your keybindings
 local on_attach = function(client, bufnr)
     local bufopts = {noremap=true, silent=true, buffer=bufnr}
-    vim.keymap.set('n', 'gD', vim.lsp.buf.declaration, bufopts)
     vim.keymap.set('n', 'gd', vim.lsp.buf.definition, bufopts)
     vim.keymap.set('n', 'K', vim.lsp.buf.hover, bufopts)
     vim.keymap.set('n', 'gi', vim.lsp.buf.implementation, bufopts)
-    vim.keymap.set('n', '<C-k>', vim.lsp.buf.signature_help, bufopts)
     vim.keymap.set('n', '<space>D', vim.lsp.buf.type_definition, bufopts)
     vim.keymap.set('n', '<space>rn', vim.lsp.buf.rename, bufopts)
     vim.keymap.set('n', '<space>ca', vim.lsp.buf.code_action, bufopts)
@@ -53,7 +51,7 @@ local on_attach = function(client, bufnr)
       end)
     end, { desc = "Fuzzy LSP document symbols (clean) with fzf" })
 
-    vim.keymap.set("n", "<leader>ws", vim.lsp.buf.workspace_symbol, bufopts)
+    -- vim.keymap.set("n", "<leader>ws", vim.lsp.buf.workspace_symbol, bufopts)
 
 end
 
