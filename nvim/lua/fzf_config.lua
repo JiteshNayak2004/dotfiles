@@ -13,6 +13,7 @@ local function fuzzy_open_files()
   local files = {
     "~/.config/nvim/init.lua",
     "~/.config/kitty/kitty.conf",
+    "~/.tmux.conf",
     "~/.Todo.txt"
   }
 
