@@ -59,7 +59,9 @@ bindkey -v
 export KEYTIMEOUT=1
 
 # Zoxide initialization
-eval "$(zoxide init zsh)"
+# eval "$(zoxide init zsh)"
+# Initialize fasd
+eval "$(fasd --init auto)"
 
 # Key bindings
 zle -N accept-current-completion
@@ -116,6 +118,8 @@ alias rm="rm -ir"
 alias llm="python3 ~/scripts/llm.py"
 alias copy="xclip -sel clip"
 alias displaymanager="sudo vim /etc/gdm3/custom.conf"
+alias config_update="~/update.sh"
+
 
 # Conditional prompt customization
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
