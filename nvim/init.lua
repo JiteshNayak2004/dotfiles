@@ -9,9 +9,16 @@ vim.keymap.set('n', [[<leader>e]], [[:e ]], {noremap=true})
 vim.keymap.set('n', [[<leader>s]], [[:! ]], {noremap=true})
 vim.keymap.set('n', [[<leader>cd]], [[:lcd %:h<CR> ]], {noremap=true})
 vim.keymap.set('n', [[<leader>t]], [[<C-6>]], {noremap=true})
+vim.keymap.set('n', '<C-t>', ':tabnew .<CR>', { noremap = true, silent = true })
+
+
+-- fzf mappings
+-- Map <leader>f to fuzzy-search
+vim.api.nvim_set_keymap('n', '<leader>sf', ':Files<CR>', { noremap = true, silent = true })
+-- Map <leader>g to fuzzy-grep
+vim.api.nvim_set_keymap('n', '<leader>g', ':Rg<CR>', { noremap = true, silent = true })
 vim.keymap.set('n', '<leader>m', ':Marks<CR>', { noremap = true, silent = true })
 vim.keymap.set('n', '<leader>f', ':Buffers<CR>', { noremap = true, silent = true })
-vim.keymap.set('n', '<C-t>', ':tabnew .<CR>', { noremap = true, silent = true })
 
 -- switching in and out of terminal
 --vim.keymap.set("n", "<M-j>", "<C-z>", { noremap = true, silent = true })
@@ -21,10 +28,6 @@ vim.keymap.set("n", "<M-v>", ":vsp .<CR>", { noremap = true, silent = true }) --
 
 
 
--- Map <leader>f to fuzzy-search
-vim.api.nvim_set_keymap('n', '<C-f>', ':Files<CR>', { noremap = true, silent = true })
--- Map <leader>g to fuzzy-grep
-vim.api.nvim_set_keymap('n', '<leader>g', ':Rg<CR>', { noremap = true, silent = true })
 vim.api.nvim_set_keymap('n', '<M-u>', '<C-u>zz', { noremap = true, silent = true })
 vim.api.nvim_set_keymap('n', '<M-d>', '<C-d>zz', { noremap = true, silent = true })
 
@@ -127,9 +130,7 @@ vim.g.netrw_keepdir = 0
 vim.g.netrw_banner = 0
 vim.g.netrw_fastbrowse = 0
 
--- fzf settings
---vim.g.fzf_layout = { down = '40%' }
---vim.g.fzf_vim.preview_window = { "right,40%", "ctrl-/" }
+
 -- search must be case insensitive
 vim.opt.ignorecase = true
 vim.opt.smartcase = true
@@ -158,10 +159,6 @@ vim.api.nvim_create_autocmd('TextYankPost', {
     vim.highlight.on_yank()
   end,
 })
--- dotfiles access command
-vim.cmd("command! Vimconf :e ~/.config/nvim/init.lua")
--- Todo access command
-vim.cmd("command! Todo :e ~/.Todo.txt")
 -- deleting whitespaces
 vim.api.nvim_create_user_command('Stripws', function()
   vim.cmd('g/^[[:space:]]*$/d')
