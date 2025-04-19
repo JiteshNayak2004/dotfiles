@@ -13,13 +13,17 @@ if &shortmess =~ 'A'
 else
   set shortmess=aoO
 endif
-badd +1 ipxact_yaml_converter.py
-badd +1 generate_ipxact_classes.py
-badd +1 constants/other_constants/ipxact_container.yaml
-badd +1 main.py
+badd +0 ipxact_yaml_converter.py
+badd +0 generate_ipxact_classes.py
+badd +0 main.py
+badd +0 constants/other_constants/ipxact_container.yaml
 argglobal
 %argdel
-edit main.py
+$argadd ipxact_yaml_converter.py
+$argadd generate_ipxact_classes.py
+$argadd main.py
+$argadd constants/other_constants/ipxact_container.yaml
+edit ipxact_yaml_converter.py
 argglobal
 setlocal fdm=manual
 setlocal fde=0
@@ -31,7 +35,7 @@ setlocal fdn=20
 setlocal fen
 silent! normal! zE
 let &fdl = &fdl
-let s:l = 1 - ((0 * winheight(0) + 14) / 29)
+let s:l = 1 - ((0 * winheight(0) + 15) / 30)
 if s:l < 1 | let s:l = 1 | endif
 keepjumps exe s:l
 normal! zt

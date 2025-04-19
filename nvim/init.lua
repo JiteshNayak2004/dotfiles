@@ -67,6 +67,7 @@ require('paq') {
     -- dovish dependency trash <to delete files/folders>
     'roginfarrer/vim-dirvish-dovish';
     'lukas-reineke/indent-blankline.nvim';
+
 }
 --MODUS <HIGH BACKGROUND AND FOREGROUND CONSTRAST>
 vim.cmd('colorscheme modus-vivendi') -- Dark
