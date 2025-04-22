@@ -8,9 +8,9 @@ vim.keymap.set('n', [[<leader>l]], [[<c-w>l]], {noremap=true})
 vim.keymap.set('n', [[<leader>e]], [[:e ]], {noremap=true})
 vim.keymap.set('n', [[<leader>s]], [[:! ]], {noremap=true})
 vim.keymap.set('n', [[<leader>cd]], [[:lcd %:h<CR]> ]], {noremap=true})
-vim.keymap.set('n', '<M-a>', [[<C-6>]], {noremap=true})
+vim.keymap.set('n', '<leader>t', [[<C-6>]], {noremap=true})
 vim.keymap.set('n', '<C-t>', ':tabnew .<CR>', { noremap = true, silent = true })
-
+vim.keymap.set('n', '<C-a>', 'ggVG', { noremap = true, silent = true, desc = 'Select All' })
 
 -- fzf mappings
 -- Map <leader>f to fuzzy-search
@@ -139,7 +139,6 @@ vim.opt.smartcase = true
 vim.opt.title = true
 vim.opt.number = true
 vim.opt.relativenumber = true
-vim.opt.clipboard = 'unnamedplus'
 vim.opt.cursorline = true
 vim.opt.cursorlineopt = 'number'
 -- vim.opt.colorcolumn = '81'
@@ -152,6 +151,10 @@ vim.opt.tabstop = 4
 vim.opt.shiftwidth = 4
 vim.opt.softtabstop = 4
 vim.opt.expandtab = true
+
+-- uses system clipboard by default
+vim.o.clipboard = "unnamedplus"
+
 
 -- Customizations
 -- Highlight yanked text

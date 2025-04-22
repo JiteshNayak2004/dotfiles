@@ -1,3 +1,4 @@
+
 # Enable Powerlevel10k instant prompt
 if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
   source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
@@ -119,6 +120,7 @@ alias llm="python3 ~/scripts/llm.py"
 alias copy="xclip -sel clip"
 alias displaymanager="sudo vim /etc/gdm3/custom.conf"
 alias config_update="~/update.sh"
+alias lg="lazygit"
 
 
 # Conditional prompt customization
@@ -148,4 +150,3 @@ zle-line-init() {
 zle -N zle-line-init
 echo -ne '\e[5 q' # Use beam shape cursor on startup.
 preexec() { echo -ne '\e[5 q' ;} # Use beam shape cursor for each new prompt.
-
