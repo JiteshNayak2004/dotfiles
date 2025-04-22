@@ -7,7 +7,7 @@ vim.keymap.set('n', [[<leader>k]], [[<c-w>k]], {noremap=true})
 vim.keymap.set('n', [[<leader>l]], [[<c-w>l]], {noremap=true})
 vim.keymap.set('n', [[<leader>e]], [[:e ]], {noremap=true})
 vim.keymap.set('n', [[<leader>s]], [[:! ]], {noremap=true})
-vim.keymap.set('n', [[<leader>cd]], [[:lcd %:h<CR]> ]], {noremap=true})
+vim.keymap.set('n', '<leader>cd', ':lcd %:h<CR>', { noremap = true })
 vim.keymap.set('n', '<leader>t', [[<C-6>]], {noremap=true})
 vim.keymap.set('n', '<C-t>', ':tabnew .<CR>', { noremap = true, silent = true })
 vim.keymap.set('n', '<C-a>', 'ggVG', { noremap = true, silent = true, desc = 'Select All' })
@@ -17,15 +17,15 @@ vim.keymap.set('n', '<C-a>', 'ggVG', { noremap = true, silent = true, desc = 'Se
 vim.api.nvim_set_keymap('n', '<C-f>', ':Files<CR>', { noremap = true, silent = true })
 -- Map <leader>g to fuzzy-grep
 vim.api.nvim_set_keymap('n', '<leader>g', ':Rg<CR>', { noremap = true, silent = true })
-vim.keymap.set('n', '<leader>m', ':Marks<CR>', { noremap = true, silent = true })
+vim.keymap.set('n', '<M-m>', ':Marks<CR>', { noremap = true, silent = true })
 vim.keymap.set('n', '<leader>f', ':Buffers<CR>', { noremap = true, silent = true })
-vim.keymap.set('n', '<leader>h', ':History<CR>', { noremap = true, silent = true })
+vim.keymap.set('n', '<M-h>', ':History<CR>', { noremap = true, silent = true })
 
 -- switching in and out of terminal
 --vim.keymap.set("n", "<M-j>", "<C-z>", { noremap = true, silent = true })
 
-vim.keymap.set("n", "<M-h>", ":sp .<CR>", { noremap = true, silent = true }) -- Horizontal split
-vim.keymap.set("n", "<M-v>", ":vsp .<CR>", { noremap = true, silent = true }) -- Vertical split
+-- vim.keymap.set("n", "<M-h>", ":sp .<CR>", { noremap = true, silent = true }) -- Horizontal split
+-- vim.keymap.set("n", "<M-v>", ":vsp .<CR>", { noremap = true, silent = true }) -- Vertical split
 
 
 

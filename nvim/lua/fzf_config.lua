@@ -30,7 +30,7 @@ end
 
 
 -- Map <leader>b to run the function in normal mode
-vim.keymap.set('n', '<leader>b', fuzzy_open_files, { noremap = true, silent = true })
+vim.keymap.set('n', '<M-b>', fuzzy_open_files, { noremap = true, silent = true })
 
 local fzf_opts = { options = vim.g.fzf_default_opts }
 
