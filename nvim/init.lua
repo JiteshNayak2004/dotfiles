@@ -14,7 +14,7 @@ vim.keymap.set('n', '<C-a>', 'ggVG', { noremap = true, silent = true, desc = 'Se
 
 -- fzf mappings
 -- Map <leader>f to fuzzy-search
-vim.api.nvim_set_keymap('n', '<C-f>', ':Files<CR>', { noremap = true, silent = true })
+vim.api.nvim_set_keymap('n', '<C-p>', ':Files<CR>', { noremap = true, silent = true })
 -- Map <leader>g to fuzzy-grep
 vim.api.nvim_set_keymap('n', '<leader>g', ':Rg<CR>', { noremap = true, silent = true })
 vim.keymap.set('n', '<M-m>', ':Marks<CR>', { noremap = true, silent = true })
@@ -29,8 +29,8 @@ vim.keymap.set('n', '<M-h>', ':History<CR>', { noremap = true, silent = true })
 
 
 
-vim.api.nvim_set_keymap('n', '<M-u>', '<C-u>zz', { noremap = true, silent = true })
-vim.api.nvim_set_keymap('n', '<M-d>', '<C-d>zz', { noremap = true, silent = true })
+-- vim.api.nvim_set_keymap('n', '<M-u>', '<C-u>zz', { noremap = true, silent = true })
+-- vim.api.nvim_set_keymap('n', '<M-d>', '<C-d>zz', { noremap = true, silent = true })
 
 
 vim.opt.hlsearch = true
