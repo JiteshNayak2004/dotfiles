@@ -14,25 +14,12 @@ vim.keymap.set('n', '<C-a>', 'ggVG', { noremap = true, silent = true, desc = 'Se
 
 -- fzf mappings
 -- Map <leader>f to fuzzy-search
-vim.api.nvim_set_keymap('n', '<C-p>', ':Files<CR>', { noremap = true, silent = true })
+vim.api.nvim_set_keymap('n', '<C-p>', ':FuzzyOpen<CR>', { noremap = true, silent = true })
 -- Map <leader>g to fuzzy-grep
 vim.api.nvim_set_keymap('n', '<leader>g', ':Rg<CR>', { noremap = true, silent = true })
 vim.keymap.set('n', '<M-m>', ':Marks<CR>', { noremap = true, silent = true })
 vim.keymap.set('n', '<leader>f', ':Buffers<CR>', { noremap = true, silent = true })
 vim.keymap.set('n', '<M-h>', ':History<CR>', { noremap = true, silent = true })
-
--- switching in and out of terminal
---vim.keymap.set("n", "<M-j>", "<C-z>", { noremap = true, silent = true })
-
--- vim.keymap.set("n", "<M-h>", ":sp .<CR>", { noremap = true, silent = true }) -- Horizontal split
--- vim.keymap.set("n", "<M-v>", ":vsp .<CR>", { noremap = true, silent = true }) -- Vertical split
-
-
-
--- vim.api.nvim_set_keymap('n', '<M-u>', '<C-u>zz', { noremap = true, silent = true })
--- vim.api.nvim_set_keymap('n', '<M-d>', '<C-d>zz', { noremap = true, silent = true })
-
-
 vim.opt.hlsearch = true
 vim.keymap.set('n', '<Esc>', '<cmd>nohlsearch<CR>')
 
@@ -53,6 +40,8 @@ require('paq') {
     'rbong/vim-flog';
     'nvim-lua/plenary.nvim';
     'junegunn/fzf';
+    'nvim-telescope/telescope.nvim';
+    'nvim-telescope/telescope-fzy-native.nvim';
     'neovim/nvim-lspconfig';
     'hrsh7th/cmp-nvim-lsp';
     'hrsh7th/cmp-buffer';
@@ -67,20 +56,30 @@ require('paq') {
     -- dovish dependency trash <to delete files/folders>
     'roginfarrer/vim-dirvish-dovish';
     'lukas-reineke/indent-blankline.nvim';
+    'projekt0n/github-nvim-theme';
+    'cloudhead/neovim-fuzzy';
+
 
 }
+-- THEMES
+-- GITHUB
+-- Set up the GitHub theme with modus-vivendi inspired structure but GitHub Whale colors
+-- Set up the GitHub theme with modus-vivendi inspired structure but GitHub Whale colors
+-- Extra highlight ove-- Set up the GitHub theme with basic configuration
 --MODUS <HIGH BACKGROUND AND FOREGROUND CONSTRAST>
+--vim.cmd('colorscheme-- First, set the modus-vivendi colorscheme
 vim.cmd('colorscheme modus-vivendi') -- Dark
 -- or
 --vim.cmd('colorscheme modus-operandi') -- Light
--- or
+
+-- KANAGAWA
 -- require('kanagawa').setup({
 --     transparent = true,
 --     colors = {theme={all={ui={bg_gutter="none"}}}}
 -- })
 -- vim.cmd [[colorscheme kanagawa]]
 
---GRUVBOX<AESTHETIC>
+-- GRUVBOX<AESTHETIC>
 -- vim.cmd [[set termguicolors]]
 -- vim.g.gruvbox_material_better_performance = true
 -- vim.g.gruvbox_material_enable_italic = true
@@ -98,6 +97,7 @@ require('blame').setup({})
 require('nvim-treesitter.configs').setup {
     highlight = {enable = true}
 }
+
 require('neogit').setup({
   disable_hint = true,  -- Disable hints for speed
   disable_insert_on_commit = True,  -- Keep commit behavior like Fugitive
@@ -168,6 +168,7 @@ vim.api.nvim_create_autocmd('TextYankPost', {
 vim.api.nvim_create_user_command('Stripws', function()
   vim.cmd('g/^[[:space:]]*$/d')
 end, { desc = 'Remove empty and whitespace-only lines' })
+
 
 -- enable lsp at the end so i still get to use nvim with my preferences if lsp errors out on me
 require('lsp')
