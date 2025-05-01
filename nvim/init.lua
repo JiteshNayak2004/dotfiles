@@ -1,139 +1,140 @@
+-- ╭────────────────────────────────────────────────────────────────────────────╮
+-- │                          LEADER AND KEYBINDINGS                            │
+-- ╰────────────────────────────────────────────────────────────────────────────╯
 vim.g.mapleader = ' '
-vim.keymap.set('n', [[<leader>w]], [[:w<cr>]], {noremap=true})
-vim.keymap.set('n', [[<leader>q]], [[<C-z>]], {noremap=true}) -- Suspend to background
-vim.keymap.set('n', [[<leader>h]], [[<c-w>h]], {noremap=true})
-vim.keymap.set('n', [[<leader>j]], [[<c-w>j]], {noremap=true})
-vim.keymap.set('n', [[<leader>k]], [[<c-w>k]], {noremap=true})
-vim.keymap.set('n', [[<leader>l]], [[<c-w>l]], {noremap=true})
-vim.keymap.set('n', [[<leader>e]], [[:e ]], {noremap=true})
-vim.keymap.set('n', [[<leader>s]], [[:! ]], {noremap=true})
+
+-- Basic mappings
+vim.keymap.set('n', '<leader>w', ':w<cr>', { noremap = true })
+vim.keymap.set('n', '<leader>q', '<C-z>', { noremap = true }) -- Suspend to background
+vim.keymap.set('n', '<leader>e', ':e ', { noremap = true })
+vim.keymap.set('n', '<leader>s', ':! ', { noremap = true })
 vim.keymap.set('n', '<leader>cd', ':lcd %:h<CR>', { noremap = true })
-vim.keymap.set('n', '<leader>t', [[<C-6>]], {noremap=true})
+vim.keymap.set('n', '<leader>t', '<C-6>', { noremap = true })
 vim.keymap.set('n', '<C-t>', ':tabnew .<CR>', { noremap = true, silent = true })
 vim.keymap.set('n', '<C-a>', 'ggVG', { noremap = true, silent = true, desc = 'Select All' })
-
--- fzf mappings
--- Map <leader>f to fuzzy-search
-vim.api.nvim_set_keymap('n', '<C-p>', ':FuzzyOpen<CR>', { noremap = true, silent = true })
--- Map <leader>g to fuzzy-grep
-vim.api.nvim_set_keymap('n', '<leader>g', ':Rg<CR>', { noremap = true, silent = true })
-vim.keymap.set('n', '<M-m>', ':Marks<CR>', { noremap = true, silent = true })
-vim.keymap.set('n', '<leader>f', ':Buffers<CR>', { noremap = true, silent = true })
-vim.keymap.set('n', '<M-h>', ':History<CR>', { noremap = true, silent = true })
-vim.opt.hlsearch = true
 vim.keymap.set('n', '<Esc>', '<cmd>nohlsearch<CR>')
 
+-- Window movement
+vim.keymap.set('n', '<leader>h', '<C-w>h', { noremap = true })
+vim.keymap.set('n', '<leader>j', '<C-w>j', { noremap = true })
+vim.keymap.set('n', '<leader>k', '<C-w>k', { noremap = true })
+vim.keymap.set('n', '<leader>l', '<C-w>l', { noremap = true })
 
+-- FZF Mappings
+vim.api.nvim_set_keymap('n', '<C-p>', ':FuzzyOpen<CR>', { noremap = true, silent = true })
+vim.api.nvim_set_keymap('n', '<leader>g', ':FzfLua live_grep_native<CR>', { noremap = true, silent = true })
+vim.api.nvim_set_keymap('n', '<leader>o', ':FzfLua lsp_document_symbols<CR>', { noremap = true, silent = true })
+vim.api.nvim_set_keymap('n', '<leader>f', ':FzfLua buffers<CR>', { noremap = true, silent = true })
+vim.keymap.set('n', '<M-h>', ':FzfLua command_history<CR>', { noremap = true, silent = true })
+
+-- ╭────────────────────────────────────────────────────────────────────────────╮
+-- │                                 PLUGINS                                    │
+-- ╰────────────────────────────────────────────────────────────────────────────╯
 require('paq') {
-    'savq/paq-nvim';
-    --'rebelot/kanagawa.nvim';
+  'savq/paq-nvim';
   'ishan9299/modus-theme-vim';
-    'sainnhe/gruvbox-material';
-    'rebelot/kanagawa.nvim';
-    'windwp/nvim-autopairs';
-    'FabijanZulj/blame.nvim';
-    'sindrets/diffview.nvim';
-    { 'nvim-treesitter/nvim-treesitter', build = ':TSUpdate' },
-    'junegunn/fzf.vim';
-    'NeogitOrg/neogit';
-    -- plenary and flog needed for neogit
-    'rbong/vim-flog';
-    'nvim-lua/plenary.nvim';
-    'junegunn/fzf';
-    'nvim-telescope/telescope.nvim';
-    'nvim-telescope/telescope-fzy-native.nvim';
-    'neovim/nvim-lspconfig';
-    'hrsh7th/cmp-nvim-lsp';
-    'hrsh7th/cmp-buffer';
-    'hrsh7th/cmp-path';
-    'hrsh7th/cmp-cmdline';
-    'hrsh7th/nvim-cmp';
-    'hrsh7th/cmp-vsnip';
-    'hrsh7th/vim-vsnip';
-    'tpope/vim-fugitive';
-    -- below two plugins help in navigating directories
-    'justinmk/vim-dirvish';
-    -- dovish dependency trash <to delete files/folders>
-    'roginfarrer/vim-dirvish-dovish';
-    'lukas-reineke/indent-blankline.nvim';
-    'projekt0n/github-nvim-theme';
-    'cloudhead/neovim-fuzzy';
-
-
+  'sainnhe/gruvbox-material';
+  'rebelot/kanagawa.nvim';
+  'windwp/nvim-autopairs';
+  'FabijanZulj/blame.nvim';
+  'sindrets/diffview.nvim';
+  { 'nvim-treesitter/nvim-treesitter', build = ':TSUpdate' };
+  'junegunn/fzf.vim';
+  'junegunn/fzf';
+  'ibhagwan/fzf-lua';
+  'NeogitOrg/neogit';
+  'rbong/vim-flog';
+  'nvim-lua/plenary.nvim';
+  'neovim/nvim-lspconfig';
+  'hrsh7th/nvim-cmp';
+  'hrsh7th/cmp-nvim-lsp';
+  'hrsh7th/cmp-buffer';
+  'hrsh7th/cmp-path';
+  'hrsh7th/cmp-cmdline';
+  'hrsh7th/cmp-vsnip';
+  'hrsh7th/vim-vsnip';
+  'tpope/vim-fugitive';
+  'justinmk/vim-dirvish';
+  'roginfarrer/vim-dirvish-dovish';
+  'lukas-reineke/indent-blankline.nvim';
+  'projekt0n/github-nvim-theme';
+  'cloudhead/neovim-fuzzy';
 }
--- THEMES
--- GITHUB
--- Set up the GitHub theme with modus-vivendi inspired structure but GitHub Whale colors
--- Set up the GitHub theme with modus-vivendi inspired structure but GitHub Whale colors
--- Extra highlight ove-- Set up the GitHub theme with basic configuration
---MODUS <HIGH BACKGROUND AND FOREGROUND CONSTRAST>
---vim.cmd('colorscheme-- First, set the modus-vivendi colorscheme
-vim.cmd('colorscheme modus-vivendi') -- Dark
--- or
---vim.cmd('colorscheme modus-operandi') -- Light
 
--- KANAGAWA
--- require('kanagawa').setup({
---     transparent = true,
---     colors = {theme={all={ui={bg_gutter="none"}}}}
--- })
--- vim.cmd [[colorscheme kanagawa]]
-
--- GRUVBOX<AESTHETIC>
--- vim.cmd [[set termguicolors]]
--- vim.g.gruvbox_material_better_performance = true
--- vim.g.gruvbox_material_enable_italic = true
--- vim.g.gruvbox_material_enable_bold = true
--- vim.g.gruvbox_material_background = 'hard'
--- vim.g.gruvbox_material_foreground = 'material'
--- vim.g.gruvbox_material_dim_inactive_windows = 0
--- vim.g.gruvbox_material_menu_selection_background = 'green'
--- vim.g.gruvbox_material_ui_contrast = 'high'
--- vim.g.gruvbox_material_transparent_background = 2
--- vim.cmd [[colorscheme gruvbox-material]]
-
+-- Plugin Configurations
+require('fzf-lua').setup({ buffers = { previewer = false } })
 require('nvim-autopairs').setup()
 require('blame').setup({})
-require('nvim-treesitter.configs').setup {
-    highlight = {enable = true}
-}
-
-require('neogit').setup({
-  disable_hint = true,  -- Disable hints for speed
-  disable_insert_on_commit = True,  -- Keep commit behavior like Fugitive
-  disable_commit_confirmation = true,
-  kind = "split",
-  graph_style = "unicode",
-  auto_refresh=true,
-  disable_context_highlighting = true,  -- Avoid unnecessary UI clutter
-  signs = {
-    section = { "", "" },  -- Remove section indicators
-    item = { "", "" },  -- Remove item indicators
-    hunk = { "", "" },  -- Remove hunk indicators
-  },
-  integrations = { diffview = true },  -- Keep Neogit simple
-  mappings = { status = { ["q"] = "Close" } },  -- Allow quick quit like Fugitive
-})
--- this if for indent lines for python files
+require('nvim-treesitter.configs').setup({ highlight = { enable = true } })
 require("ibl").setup()
 
-vim.cmd [[highlight ExtraWhitespace ctermbg=grey guibg=grey]] -- highlight trailing whitespace
-vim.cmd [[hi StatusLine ctermbg=Cyan ctermfg=Red]]
-vim.cmd [[match ExtraWhitespace /\s\+$/]]
--- vim.cmd [[set cmdheight=0]]
+-- Neogit setup
+require('neogit').setup({
+  disable_hint = true,
+  disable_insert_on_commit = true,
+  disable_commit_confirmation = true,
+  kind = 'split',
+  graph_style = 'unicode',
+  auto_refresh = true,
+  disable_context_highlighting = true,
+  signs = { section = { "", "" }, item = { "", "" }, hunk = { "", "" } },
+  integrations = { diffview = true },
+  mappings = { status = { ["q"] = "Close" } },
+})
 
---netrw  settings
--- use vim-dirvish to traverse thru file-history
--- use a for new file,A for new-dir,r for rename,dd for delete
--- advanced commands use :! command and then % to point to the
--- current buffer path and can then use tab to address the file
-vim.g.netrw_liststyle = 0
-vim.g.netrw_keepdir = 0
-vim.g.netrw_banner = 0
-vim.g.netrw_fastbrowse = 0
+-- ╭────────────────────────────────────────────────────────────────────────────╮
+-- │                                 THEMES                                     │
+-- ╰────────────────────────────────────────────────────────────────────────────╯
+local override = require('github-theme.override')
+local pure_black = '#000000'
+override.groups = {
+  all = {
+    Normal = { bg = pure_black },
+    NormalNC = { bg = pure_black },
+    EndOfBuffer = { fg = pure_black },
+    StatusLine = { fg = "#e6edf3", bg = "#333333", style = "" },
+    StatusLineNC = { fg = "#8b949e", bg = "#161b22", style = "" },
+  },
+}
+require('github-theme').setup({ override = override })
+vim.cmd('colorscheme github_dark')
 
+-- Uncomment to switch theme:
+-- vim.cmd('colorscheme modus-vivendi')
+-- require('kanagawa').setup({ transparent = true, colors = { theme = { all = { ui = { bg_gutter = "none" } } } } })
+-- vim.cmd [[colorscheme kanagawa]]
+-- vim.cmd [[colorscheme gruvbox-material]]
 
--- search must be case insensitive
+-- ╭────────────────────────────────────────────────────────────────────────────╮
+-- │                           CUSTOM FZF PICKERS                               │
+-- ╰────────────────────────────────────────────────────────────────────────────╯
+local dotfiles = {
+  "~/.config/nvim/init.lua",
+  "~/.config/nvim/lua/fzf_config.lua",
+  "~/.config/nvim/lua/lsp.lua",
+  "~/.config/kitty/kitty.conf",
+  "~/.tmux.conf",
+  "~/.zshrc",
+  "~/.Todo.txt",
+}
+
+local function open_dotfiles()
+  require('fzf-lua').fzf_exec(dotfiles, {
+    prompt = 'Dotfiles> ',
+    previewer = false,
+    actions = {
+      ['default'] = function(selected)
+        vim.cmd('edit ' .. vim.fn.expand(selected[1]))
+      end
+    },
+  })
+end
+vim.keymap.set('n', '<M-b>', open_dotfiles, { desc = 'FZF: Open dotfiles' })
+
+-- ╭────────────────────────────────────────────────────────────────────────────╮
+-- │                                SETTINGS                                   │
+-- ╰────────────────────────────────────────────────────────────────────────────╯
+vim.opt.hlsearch = true
 vim.opt.ignorecase = true
 vim.opt.smartcase = true
 vim.opt.title = true
@@ -141,22 +142,22 @@ vim.opt.number = true
 vim.opt.relativenumber = true
 vim.opt.cursorline = true
 vim.opt.cursorlineopt = 'number'
--- vim.opt.colorcolumn = '81'
 vim.opt.splitbelow = true
 vim.opt.splitright = true
 vim.opt.undofile = true
 vim.opt.laststatus = 2
-vim.opt.cursorline = true
 vim.opt.tabstop = 4
 vim.opt.shiftwidth = 4
 vim.opt.softtabstop = 4
 vim.opt.expandtab = true
-
--- uses system clipboard by default
 vim.o.clipboard = "unnamedplus"
 
+-- netrw settings
+vim.g.netrw_liststyle = 0
+vim.g.netrw_keepdir = 0
+vim.g.netrw_banner = 0
+vim.g.netrw_fastbrowse = 0
 
--- Customizations
 -- Highlight yanked text
 vim.api.nvim_create_autocmd('TextYankPost', {
   desc = 'Highlight yanked text',
@@ -164,12 +165,15 @@ vim.api.nvim_create_autocmd('TextYankPost', {
     vim.highlight.on_yank()
   end,
 })
--- deleting whitespaces
+
+-- Strip whitespace command
 vim.api.nvim_create_user_command('Stripws', function()
   vim.cmd('g/^[[:space:]]*$/d')
 end, { desc = 'Remove empty and whitespace-only lines' })
 
+-- Highlight trailing whitespace
+vim.cmd [[highlight ExtraWhitespace ctermbg=grey guibg=grey]]
+vim.cmd [[match ExtraWhitespace /\s\+$/]]
 
--- enable lsp at the end so i still get to use nvim with my preferences if lsp errors out on me
+-- LSP initialization (placed at end to ensure preferences are loaded)
 require('lsp')
-require('fzf_config')
