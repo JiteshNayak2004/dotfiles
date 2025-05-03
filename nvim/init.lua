@@ -5,7 +5,7 @@ vim.g.mapleader = ' '
 
 -- Basic mappings
 vim.keymap.set('n', '<leader>w', ':w<cr>', { noremap = true })
-vim.keymap.set('n', '<leader>q', ':wq<cr>', { noremap = true }) -- Suspend to background
+vim.keymap.set('n', '<leader>q', ':q<cr>', { noremap = true }) -- Suspend to background
 vim.keymap.set('n', '<leader>e', ':e ', { noremap = true })
 vim.keymap.set('n', '<leader>s', ':! ', { noremap = true })
 vim.keymap.set('n', '<leader>cd', ':lcd %:h<CR>', { noremap = true })
