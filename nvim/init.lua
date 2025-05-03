@@ -5,7 +5,7 @@ vim.g.mapleader = ' '
 
 -- Basic mappings
 vim.keymap.set('n', '<leader>w', ':w<cr>', { noremap = true })
-vim.keymap.set('n', '<leader>q', '<C-z>', { noremap = true }) -- Suspend to background
+vim.keymap.set('n', '<leader>q', ':wq<cr>', { noremap = true }) -- Suspend to background
 vim.keymap.set('n', '<leader>e', ':e ', { noremap = true })
 vim.keymap.set('n', '<leader>s', ':! ', { noremap = true })
 vim.keymap.set('n', '<leader>cd', ':lcd %:h<CR>', { noremap = true })
@@ -39,12 +39,10 @@ require('paq') {
   'FabijanZulj/blame.nvim';
   'sindrets/diffview.nvim';
   { 'nvim-treesitter/nvim-treesitter', build = ':TSUpdate' };
-  'junegunn/fzf.vim';
   'junegunn/fzf';
   'ibhagwan/fzf-lua';
   'NeogitOrg/neogit';
   'rbong/vim-flog';
-  'nvim-lua/plenary.nvim';
   'neovim/nvim-lspconfig';
   'hrsh7th/nvim-cmp';
   'hrsh7th/cmp-nvim-lsp';
@@ -54,12 +52,16 @@ require('paq') {
   'hrsh7th/cmp-vsnip';
   'hrsh7th/vim-vsnip';
   'tpope/vim-fugitive';
-  'justinmk/vim-dirvish';
-  'roginfarrer/vim-dirvish-dovish';
+  'nvim-lua/plenary.nvim';
+  -- 'justinmk/vim-dirvish';
+  -- 'roginfarrer/vim-dirvish-dovish';
+  'mtikekar/vim-bsv';
+  'preservim/nerdtree';
   'lukas-reineke/indent-blankline.nvim';
   'projekt0n/github-nvim-theme';
   'cloudhead/neovim-fuzzy';
 }
+
 
 -- Plugin Configurations
 require('fzf-lua').setup({ buffers = { previewer = false } })
@@ -67,6 +69,9 @@ require('nvim-autopairs').setup()
 require('blame').setup({})
 require('nvim-treesitter.configs').setup({ highlight = { enable = true } })
 require("ibl").setup()
+vim.keymap.set('n', '-', ':NERDTreeToggle<CR>', { noremap = true, desc = 'Toggle Neo-tree' })
+vim.g.NERDTreeMinimalUI = 1
+vim.g.NERDTreeWinSize = 35
 
 -- Neogit setup
 require('neogit').setup({
