@@ -8,7 +8,7 @@ vim.keymap.set('n', '<leader>w', ':w<cr>', { noremap = true })
 vim.keymap.set('n', '<leader>q', ':q<cr>', { noremap = true }) -- Suspend to background
 vim.keymap.set('n', '<leader>e', ':e ', { noremap = true })
 vim.keymap.set('n', '<leader>s', ':! ', { noremap = true })
-vim.keymap.set('n', '<leader>cd', ':lcd %:h<CR>', { noremap = true })
+vim.keymap.set('n', '<M-p>', ':FzfLua<CR>', { noremap = true })
 vim.keymap.set('n', '<leader>t', '<C-6>', { noremap = true })
 vim.keymap.set('n', '<C-t>', ':tabnew .<CR>', { noremap = true, silent = true })
 vim.keymap.set('n', '<C-a>', 'ggVG', { noremap = true, silent = true, desc = 'Select All' })
@@ -72,6 +72,7 @@ require("ibl").setup()
 vim.keymap.set('n', '-', ':NERDTreeToggle<CR>', { noremap = true, desc = 'Toggle Neo-tree' })
 vim.g.NERDTreeMinimalUI = 1
 vim.g.NERDTreeWinSize = 35
+vim.g.NERDTreeUseTCD = 1
 
 -- Neogit setup
 require('neogit').setup({
