@@ -13,6 +13,7 @@ vim.keymap.set('n', '<leader>t', '<C-6>', { noremap = true })
 vim.keymap.set('n', '<C-t>', ':tabnew .<CR>', { noremap = true, silent = true })
 vim.keymap.set('n', '<C-a>', 'ggVG', { noremap = true, silent = true, desc = 'Select All' })
 vim.keymap.set('n', '<Esc>', '<cmd>nohlsearch<CR>')
+vim.keymap.set('n', '<leader>cd', ':lcd %:h<CR>', { noremap = true })
 
 -- Window movement
 vim.keymap.set('n', '<leader>h', '<C-w>h', { noremap = true })
@@ -41,7 +42,7 @@ require('paq') {
   { 'nvim-treesitter/nvim-treesitter', build = ':TSUpdate' };
   'junegunn/fzf';
   'ibhagwan/fzf-lua';
-  'NeogitOrg/neogit';
+  -- 'NeogitOrg/neogit';
   'rbong/vim-flog';
   'neovim/nvim-lspconfig';
   'hrsh7th/nvim-cmp';
@@ -64,7 +65,12 @@ require('paq') {
 
 
 -- Plugin Configurations
-require('fzf-lua').setup({ buffers = { previewer = false } })
+require('fzf-lua').setup({
+  -- Disable previewer for buffers
+  buffers = {
+    previewer = false
+  },
+})
 require('nvim-autopairs').setup()
 require('blame').setup({})
 require('nvim-treesitter.configs').setup({ highlight = { enable = true } })
@@ -75,18 +81,18 @@ vim.g.NERDTreeWinSize = 35
 vim.g.NERDTreeUseTCD = 1
 
 -- Neogit setup
-require('neogit').setup({
-  disable_hint = true,
-  disable_insert_on_commit = true,
-  disable_commit_confirmation = true,
-  kind = 'split',
-  graph_style = 'unicode',
-  auto_refresh = true,
-  disable_context_highlighting = true,
-  signs = { section = { "", "" }, item = { "", "" }, hunk = { "", "" } },
-  integrations = { diffview = true },
-  mappings = { status = { ["q"] = "Close" } },
-})
+-- require('neogit').setup({
+--   disable_hint = true,
+--   disable_insert_on_commit = true,
+--   disable_commit_confirmation = true,
+--   kind = 'split',
+--   graph_style = 'unicode',
+--   auto_refresh = true,
+--   disable_context_highlighting = true,
+--   signs = { section = { "", "" }, item = { "", "" }, hunk = { "", "" } },
+--   integrations = { diffview = true },
+--   mappings = { status = { ["q"] = "Close" } },
+-- })
 
 -- ╭────────────────────────────────────────────────────────────────────────────╮
 -- │                                 THEMES                                     │
