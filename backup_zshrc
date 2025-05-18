@@ -1,4 +1,3 @@
-
 # Enable Powerlevel10k instant prompt
 if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
   source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
@@ -43,10 +42,11 @@ plugins=(
 source $ZSH/oh-my-zsh.sh
 
 # Environment variables
-export PATH="$PATH:/home/jitesh/binaries/risc32_install/bin"
-export PATH="$PATH:/home/jitesh/Desktop/work/incore/misc/bsc/bsc_install/bin"
+export PATH="$PATH:/home/jitesh/riscv/bin"
+# export PATH="$PATH:/home/jitesh/riscv_binaries/ubuntu-toolchain-az/riscv_toolchain_ubuntu/bin"
+# export PATH="$PATH:/home/jitesh/Desktop/work/incore/misc/bsc/bsc_install/bin"
+export PATH="$PATH:/home/jitesh/Desktop/work/incore/misc/incore_bsv/bsc/bsc-main/inst/bin"
 export PATH="$PATH:/usr/bin/iverilog"
-export PATH="$PATH:/home/jitesh/Desktop/work/incore/bsc/inst/bin"
 export PATH="$PATH:/home/jitesh/binaries"
 export PATH="$PATH:/usr/bin/verilator"
 export PATH="$PATH:/usr/local/bin/ctags"
@@ -90,7 +90,7 @@ activate() {
         echo "Error: Virtual environment '$1' does not exist."
         return 1
     fi
-    source "$pyvirtualenv/$1/bin/activate"
+source "$pyvirtualenv/$1/bin/activate"
 }
 
 # Remove a virtual environment
@@ -122,6 +122,11 @@ alias displaymanager="sudo vim /etc/gdm3/custom.conf"
 alias config_update="~/update.sh"
 alias lg="lazygit"
 
+# conda setup
+alias condasetup='source ~/miniconda3/etc/profile.d/conda.sh && conda activate base'
+
+
+
 
 # Conditional prompt customization
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
@@ -150,3 +155,15 @@ zle-line-init() {
 zle -N zle-line-init
 echo -ne '\e[5 q' # Use beam shape cursor on startup.
 preexec() { echo -ne '\e[5 q' ;} # Use beam shape cursor for each new prompt.
+# Enable developer mode
+export DEVICE_MANAGER_DEV=1
+
+# Set your GitLab token
+export GITLAB_TOKEN=ypM5ddYBdAAaiKa4Uy1y
+
+export DM_USER_KEY=Awz3aosC2vkMjZAyVyhr
+export DM_LICENSE_KEY=gAAAAABnWso96V-by4enX0s9sBA9ZKwBSiW1Gm8SRRwrH_dEi1KpxY5KWwsFFD1ACZxHO2R3GXGXP-bLkL0QfaRp6xx4BL1N2z-nT9PS4CcmsuDMwW_9aW8=
+
+
+
+
