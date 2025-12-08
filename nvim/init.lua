@@ -180,8 +180,9 @@ vim.api.nvim_create_autocmd('TextYankPost', {
 
 -- Strip whitespace command
 vim.api.nvim_create_user_command('Stripws', function()
-  vim.cmd('g/^[[:space:]]*$/d')
-end, { desc = 'Remove empty and whitespace-only lines' })
+  -- remove trailing whitespace first
+  vim.cmd([[%s/\s\+$//e]])
+end, { desc = 'Strip trailing whitespace and remove empty/whitespace-only lines' })
 
 -- Highlight trailing whitespace
 vim.cmd [[highlight ExtraWhitespace ctermbg=grey guibg=grey]]
