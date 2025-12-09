@@ -8,7 +8,6 @@ vim.keymap.set('n', '<leader>w', ':w<cr>', { noremap = true })
 vim.keymap.set('n', '<leader>q', ':q<cr>', { noremap = true }) -- Suspend to background
 vim.keymap.set('n', '<leader>e', ':e ', { noremap = true })
 vim.keymap.set('n', '<leader>s', ':! ', { noremap = true })
-vim.keymap.set('n', '<M-p>', ':FzfLua<CR>', { noremap = true })
 vim.keymap.set('n', '<leader>t', '<C-6>', { noremap = true })
 vim.keymap.set('n', '<C-t>', ':tabnew .<CR>', { noremap = true, silent = true })
 vim.keymap.set('n', '<C-a>', 'ggVG', { noremap = true, silent = true, desc = 'Select All' })
@@ -23,10 +22,24 @@ vim.keymap.set('n', '<leader>l', '<C-w>l', { noremap = true })
 
 -- FZF Mappings
 vim.api.nvim_set_keymap('n', '<C-p>', ':FuzzyOpen<CR>', { noremap = true, silent = true })
+-- g synonym for grep 
 vim.api.nvim_set_keymap('n', '<leader>g', ':FzfLua live_grep_native<CR>', { noremap = true, silent = true })
+-- o synonym for objects 
 vim.api.nvim_set_keymap('n', '<leader>o', ':FzfLua lsp_document_symbols<CR>', { noremap = true, silent = true })
+-- wo synonym for workspace objects 
+vim.api.nvim_set_keymap('n', '<leader>wo', ':FzfLua lsp_live_workspace_symbols<CR>', { noremap = true, silent = true })
+-- wo synonym for recent search
+vim.api.nvim_set_keymap('n', '<C-s>', ':FzfLua search_history<CR>', { noremap = true, silent = true })
+-- wo synonym for recent history
+vim.api.nvim_set_keymap('n', '<C-h>', ':FzfLua command_history<CR>', { noremap = true, silent = true })
 vim.api.nvim_set_keymap('n', '<leader>f', ':FzfLua buffers<CR>', { noremap = true, silent = true })
-vim.keymap.set('n', '<M-h>', ':FzfLua command_history<CR>', { noremap = true, silent = true })
+vim.keymap.set('n', '<M-h>', ':FzfLua<CR>', { noremap = true })
+vim.keymap.set('n', '<M-p>', ':FzfLua oldfiles<CR>', { noremap = true })
+-- Cycle to the next tab (Meta + j)
+vim.keymap.set('n', '<M-j>', ':tabnext<CR>', { noremap = true, silent = true, desc = 'Next Tab' })
+
+-- Cycle to the previous tab (Meta + k)
+vim.keymap.set('n', '<M-k>', ':tabprevious<CR>', { noremap = true, silent = true, desc = 'Previous Tab' })
 
 -- ╭────────────────────────────────────────────────────────────────────────────╮
 -- │                                 PLUGINS                                    │
