@@ -35,6 +35,7 @@ vim.api.nvim_set_keymap('n', '<C-h>', ':FzfLua command_history<CR>', { noremap =
 vim.api.nvim_set_keymap('n', '<leader>f', ':FzfLua buffers<CR>', { noremap = true, silent = true })
 vim.keymap.set('n', '<M-h>', ':FzfLua<CR>', { noremap = true })
 vim.keymap.set('n', '<M-p>', ':FzfLua oldfiles<CR>', { noremap = true })
+vim.keymap.set('n', '<M-d>', ':FzfLua zoxide<CR>', { noremap = true })
 -- Cycle to the next tab (Meta + j)
 vim.keymap.set('n', '<M-j>', ':tabnext<CR>', { noremap = true, silent = true, desc = 'Next Tab' })
 
@@ -106,6 +107,8 @@ vim.g.NERDTreeUseTCD = 1
 --   integrations = { diffview = true },
 --   mappings = { status = { ["q"] = "Close" } },
 -- })
+
+
 
 -- ╭────────────────────────────────────────────────────────────────────────────╮
 -- │                                 THEMES                                     │
