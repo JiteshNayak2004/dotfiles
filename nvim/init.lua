@@ -27,7 +27,7 @@ vim.api.nvim_set_keymap('n', '<leader>g', ':FzfLua live_grep_native<CR>', { nore
 -- o synonym for objects 
 vim.api.nvim_set_keymap('n', '<leader>o', ':FzfLua lsp_document_symbols<CR>', { noremap = true, silent = true })
 -- wo synonym for workspace objects 
-vim.api.nvim_set_keymap('n', '<leader>wo', ':FzfLua lsp_live_workspace_symbols<CR>', { noremap = true, silent = true })
+vim.api.nvim_set_keymap('n', '<leader>O', ':FzfLua lsp_live_workspace_symbols<CR>', { noremap = true, silent = true })
 -- wo synonym for recent search
 vim.api.nvim_set_keymap('n', '<C-s>', ':FzfLua search_history<CR>', { noremap = true, silent = true })
 -- wo synonym for recent history
@@ -42,6 +42,15 @@ vim.keymap.set('n', '<M-j>', ':tabnext<CR>', { noremap = true, silent = true, de
 -- Cycle to the previous tab (Meta + k)
 vim.keymap.set('n', '<M-k>', ':tabprevious<CR>', { noremap = true, silent = true, desc = 'Previous Tab' })
 
+
+-- Map <leader>1 .. <leader>9 to tab switching
+for i = 1, 9 do
+  vim.keymap.set("n", "<leader>" .. i, i .. "gt", {
+    noremap = true,
+    silent = true,
+    desc = "Go to tab " .. i,
+  })
+end
 -- ╭────────────────────────────────────────────────────────────────────────────╮
 -- │                                 PLUGINS                                    │
 -- ╰────────────────────────────────────────────────────────────────────────────╯
@@ -79,12 +88,26 @@ require('paq') {
 
 
 -- Plugin Configurations
+local actions = require("fzf-lua.actions")
+
 require('fzf-lua').setup({
   -- Disable previewer for buffers
   buffers = {
     previewer = false
   },
+
+  actions = {
+    files = {
+      ["ctrl-q"] = actions.file_sel_to_qf,
+    },
+    grep = {
+      ["ctrl-q"] = actions.file_sel_to_qf,
+    },
+  },
 })
+
+
+
 require('nvim-autopairs').setup()
 require('blame').setup({})
 require('nvim-treesitter.configs').setup({ highlight = { enable = true } })
