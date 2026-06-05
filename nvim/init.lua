@@ -23,7 +23,7 @@ vim.keymap.set('n', '<leader>l', '<C-w>l', { noremap = true })
 -- FZF Mappings
 vim.api.nvim_set_keymap('n', '<C-p>', ':FuzzyOpen<CR>', { noremap = true, silent = true })
 -- g synonym for grep 
-vim.api.nvim_set_keymap('n', '<leader>g', ':FzfLua live_grep_native<CR>', { noremap = true, silent = true })
+vim.api.nvim_set_keymap('n', '<C-g>', ':Telescope live_grep<CR>', { noremap = true, silent = true })
 -- o synonym for objects 
 vim.api.nvim_set_keymap('n', '<leader>o', ':FzfLua lsp_document_symbols<CR>', { noremap = true, silent = true })
 -- wo synonym for workspace objects 
@@ -76,6 +76,7 @@ require('paq') {
   'hrsh7th/cmp-vsnip';
   'hrsh7th/vim-vsnip';
   'tpope/vim-fugitive';
+  'tpope/vim-repeat';
   'nvim-lua/plenary.nvim';
   -- 'justinmk/vim-dirvish';
   -- 'roginfarrer/vim-dirvish-dovish';
@@ -84,6 +85,8 @@ require('paq') {
   'lukas-reineke/indent-blankline.nvim';
   'projekt0n/github-nvim-theme';
   'cloudhead/neovim-fuzzy';
+  'nvim-telescope/telescope.nvim';
+  'nvim-telescope/telescope-fzf-native.nvim';
 }
 
 
@@ -95,18 +98,51 @@ require('fzf-lua').setup({
   buffers = {
     previewer = false
   },
-
-  actions = {
-    files = {
-      ["ctrl-q"] = actions.file_sel_to_qf,
-    },
-    grep = {
-      ["ctrl-q"] = actions.file_sel_to_qf,
-    },
-  },
 })
 
 
+
+local telescope = require('telescope')
+local actions = require('telescope.actions')
+local themes = require('telescope.themes')
+
+telescope.setup({
+  defaults = vim.tbl_extend('force', themes.get_ivy({
+    disable_devicons = true,
+    previewer = false,
+  }), {
+    mappings = {
+      i = {
+        ['<C-q>'] = actions.send_to_qflist + actions.open_qflist,
+        ['<C-v>'] = actions.select_vertical,
+        ['<C-s>'] = actions.select_horizontal,
+      },
+      n = {
+        ['<C-q>'] = actions.send_to_qflist + actions.open_qflist,
+        ['<C-v>'] = actions.select_vertical,
+        ['<C-s>'] = actions.select_horizontal,
+      },
+    },
+  }),
+  pickers = {
+    live_grep = {
+      layout_strategy = 'bottom_pane',
+      layout_config = {
+        height = 0.4,
+      },
+      previewer = false,
+    },
+  },
+  extensions = {
+    fzf = {
+      fuzzy = true,
+      override_generic_sorter = true,
+      override_file_sorter = true,
+    }
+  },
+})
+
+pcall(function() telescope.load_extension('fzf') end)
 
 require('nvim-autopairs').setup()
 require('blame').setup({})
@@ -229,3 +265,4 @@ vim.cmd [[match ExtraWhitespace /\s\+$/]]
 
 -- LSP initialization (placed at end to ensure preferences are loaded)
 require('lsp')
+
