@@ -23,7 +23,7 @@ vim.keymap.set('n', '<leader>l', '<C-w>l', { noremap = true })
 -- FZF Mappings
 vim.api.nvim_set_keymap('n', '<C-p>', ':FuzzyOpen<CR>', { noremap = true, silent = true })
 -- g synonym for grep 
-vim.api.nvim_set_keymap('n', '<C-g>', ':Telescope live_grep<CR>', { noremap = true, silent = true })
+vim.api.nvim_set_keymap('n', '<leader>g', ':FzfLua live_grep_native<CR>', { noremap = true, silent = true })
 -- o synonym for objects 
 vim.api.nvim_set_keymap('n', '<leader>o', ':FzfLua lsp_document_symbols<CR>', { noremap = true, silent = true })
 -- wo synonym for workspace objects 
@@ -76,7 +76,6 @@ require('paq') {
   'hrsh7th/cmp-vsnip';
   'hrsh7th/vim-vsnip';
   'tpope/vim-fugitive';
-  'tpope/vim-repeat';
   'nvim-lua/plenary.nvim';
   -- 'justinmk/vim-dirvish';
   -- 'roginfarrer/vim-dirvish-dovish';
@@ -85,8 +84,6 @@ require('paq') {
   'lukas-reineke/indent-blankline.nvim';
   'projekt0n/github-nvim-theme';
   'cloudhead/neovim-fuzzy';
-  'nvim-telescope/telescope.nvim';
-  'nvim-telescope/telescope-fzf-native.nvim';
 }
 
 
@@ -98,51 +95,18 @@ require('fzf-lua').setup({
   buffers = {
     previewer = false
   },
+
+  actions = {
+    files = {
+      ["ctrl-q"] = actions.file_sel_to_qf,
+    },
+    grep = {
+      ["ctrl-q"] = actions.file_sel_to_qf,
+    },
+  },
 })
 
 
-
-local telescope = require('telescope')
-local actions = require('telescope.actions')
-local themes = require('telescope.themes')
-
-telescope.setup({
-  defaults = vim.tbl_extend('force', themes.get_ivy({
-    disable_devicons = true,
-    previewer = false,
-  }), {
-    mappings = {
-      i = {
-        ['<C-q>'] = actions.send_to_qflist + actions.open_qflist,
-        ['<C-v>'] = actions.select_vertical,
-        ['<C-s>'] = actions.select_horizontal,
-      },
-      n = {
-        ['<C-q>'] = actions.send_to_qflist + actions.open_qflist,
-        ['<C-v>'] = actions.select_vertical,
-        ['<C-s>'] = actions.select_horizontal,
-      },
-    },
-  }),
-  pickers = {
-    live_grep = {
-      layout_strategy = 'bottom_pane',
-      layout_config = {
-        height = 0.4,
-      },
-      previewer = false,
-    },
-  },
-  extensions = {
-    fzf = {
-      fuzzy = true,
-      override_generic_sorter = true,
-      override_file_sorter = true,
-    }
-  },
-})
-
-pcall(function() telescope.load_extension('fzf') end)
 
 require('nvim-autopairs').setup()
 require('blame').setup({})
@@ -203,6 +167,8 @@ local dotfiles = {
   "~/.tmux.conf",
   "~/.zshrc",
   "~/.Todo.txt",
+  "~/.scratchpad.txt",
+
 }
 
 local function open_dotfiles()
@@ -252,6 +218,118 @@ vim.api.nvim_create_autocmd('TextYankPost', {
     vim.highlight.on_yank()
   end,
 })
+
+-- :rough - open/create rough note for today
+vim.api.nvim_create_user_command('Rough', function(opts)
+  local note_dir = notes_dir .. '/ROUGH'
+  local date = os.date('%Y-%m-%d')
+  local base_name = 'ROUGH_' .. date
+  local pattern = base_name .. '*.md'
+
+  -- Find existing files for today
+  local files = vim.fn.glob(note_dir .. '/' .. pattern, false, true)
+  local existing_count = #files
+
+  -- Determine next index
+  local index = 1
+  if existing_count > 0 then
+    local max_index = 0
+    for _, f in ipairs(files) do
+      local name = vim.fn.fnamemodify(f, ':t:r')
+      local idx = name:match(base_name .. '_(%d+)$')
+      if idx then
+        local n = tonumber(idx)
+        if n > max_index then max_index = n end
+      else
+        -- File without index (e.g., ROUGH_YYYY-MM-DD.md), treat as index 0
+        -- so next file will be _1.md
+        max_index = math.max(max_index, 0)
+      end
+    end
+    index = max_index + 1
+  end
+
+  local filename
+  if opts.args == 'new' then
+    if existing_count == 0 then
+      filename = note_dir .. '/' .. base_name .. '.md'
+    else
+      filename = note_dir .. '/' .. base_name .. '_' .. index .. '.md'
+    end
+  else
+    -- :rough - open existing, or create if none
+    if existing_count == 0 then
+      filename = note_dir .. '/' .. base_name .. '.md'
+      vim.loop.fs_write(vim.loop.fs_open(filename, 'w', 438), '', 0)
+    else
+      -- If the latest file (index-1) doesn't exist, create it;
+      -- otherwise open the latest existing file
+      local candidate_index = index - 1
+      if candidate_index >= 1 then
+        latest_file = note_dir .. '/' .. base_name .. '_' .. candidate_index .. '.md'
+      else
+        latest_file = note_dir .. '/' .. base_name .. '.md'
+      end
+      -- If the candidate file doesn't exist, use index (create new indexed file)
+      if vim.loop.fs_stat(latest_file) == nil then
+        -- Candidate doesn't exist, so create new file with current index
+        filename = note_dir .. '/' .. base_name .. '_' .. index .. '.md'
+      else
+        -- Candidate exists, open it
+        filename = latest_file
+      end
+    end
+  end
+
+  vim.cmd('edit ' .. filename)
+end, { nargs = '?', complete = function() return { 'new' } end, desc = 'Open/create rough note for today' })
+
+-- :rough new - create new rough note
+vim.api.nvim_create_user_command('RoughNew', function()
+  vim.cmd('Rough new')
+end, { desc = 'Create a new rough note for today' })
+
+local notes_dir = vim.fn.expand('$HOME') .. '/Notebook'
+
+-- :note - Fuzzy find files or directories depending on whether an argument is provided
+vim.api.nvim_create_user_command('Note', function(opts)
+  local arg = opts.args and vim.trim(opts.args) or ''
+
+  if arg == '' then
+    -- CASE 1: No arguments provided -> Fuzzy find ALL FILES in Notebook (any depth)
+    local items = vim.fn.systemlist(string.format('find %s -type f 2>/dev/null', vim.fn.shellescape(notes_dir)))
+
+    require('fzf-lua').fzf_exec(items, {
+      prompt = 'Notes (Files)> ',
+      previewer = true,
+      actions = {
+        ['default'] = function(selected)
+          if #selected > 0 then
+            local file_path = vim.fn.substitute(selected[1], '^%s*', '', '')
+            vim.cmd('edit ' .. vim.fn.fnameescape(file_path))
+          end
+        end,
+      },
+    })
+  else
+    -- CASE 2: Filename provided -> Fuzzy find ALL DIRECTORIES in Notebook (any depth)
+    local items = vim.fn.systemlist(string.format('find %s -type d 2>/dev/null', vim.fn.shellescape(notes_dir)))
+
+    require('fzf-lua').fzf_exec(items, {
+      prompt = 'Notes (Dirs for "' .. arg .. '")> ',
+      previewer = false,
+      actions = {
+        ['default'] = function(selected)
+          if #selected > 0 then
+            local selected_dir = vim.fn.substitute(selected[1], '^%s*', '', ''):gsub('/$', '')
+            local full_path = selected_dir .. '/' .. arg
+            vim.cmd('edit ' .. vim.fn.fnameescape(full_path))
+          end
+        end,
+      },
+    })
+  end
+end, { nargs = '?', complete = 'file', desc = 'Fuzzy find notebook files or directories to create/open notes' })
 
 -- Strip whitespace command
 vim.api.nvim_create_user_command('Stripws', function()
