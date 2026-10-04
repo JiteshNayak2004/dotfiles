@@ -65,7 +65,8 @@ require('paq') {
   { 'nvim-treesitter/nvim-treesitter', build = ':TSUpdate' };
   'junegunn/fzf';
   'ibhagwan/fzf-lua';
-  -- 'NeogitOrg/neogit';
+  'NeogitOrg/neogit';
+  { 'iamcco/markdown-preview.nvim', build = 'npx --yes yarn@1.22.22 --cwd app install --frozen-lockfile' };
   'rbong/vim-flog';
   'neovim/nvim-lspconfig';
   'hrsh7th/nvim-cmp';
@@ -98,6 +99,7 @@ require('fzf-lua').setup({
 
   actions = {
     files = {
+      true,
       ["ctrl-q"] = actions.file_sel_to_qf,
     },
     grep = {
@@ -184,6 +186,122 @@ local function open_dotfiles()
 end
 vim.keymap.set('n', '<M-b>', open_dotfiles, { desc = 'FZF: Open dotfiles' })
 
+local session_dir = vim.fn.stdpath("config") .. "/sessions"
+local active_session
+
+local function session_name(name)
+  name = vim.trim(name or "")
+  if name == "" or not name:match("^[%w._-]+$") then
+    vim.notify("Session names may contain only letters, numbers, dot, dash, and underscore", vim.log.levels.ERROR)
+    return nil
+  end
+  return name
+end
+
+local function session_path(name)
+  name = session_name(name)
+  return name and (session_dir .. "/" .. name .. ".vim") or nil
+end
+
+local function session_names()
+  local names = {}
+  for _, path in ipairs(vim.fn.globpath(session_dir, "*.vim", false, true)) do
+    names[#names + 1] = vim.fn.fnamemodify(path, ":t:r")
+  end
+  table.sort(names)
+  return names
+end
+
+local function has_modified_buffers()
+  for _, bufnr in ipairs(vim.api.nvim_list_bufs()) do
+    if vim.bo[bufnr].modified then return true end
+  end
+  return false
+end
+
+local function save_session(name)
+  local path = session_path(name)
+  if not path then return false end
+  vim.fn.mkdir(session_dir, "p")
+  vim.cmd("mksession! " .. vim.fn.fnameescape(path))
+  active_session = name
+  vim.notify("Saved session: " .. name)
+  return true
+end
+
+local function load_session(name)
+  if has_modified_buffers() then
+    vim.notify("Save or discard modified buffers before loading a session", vim.log.levels.WARN)
+    return false
+  end
+  local path = session_path(name)
+  if not path or vim.fn.filereadable(path) == 0 then return false end
+  local ok, err = pcall(vim.cmd, "source " .. vim.fn.fnameescape(path))
+  if not ok then
+    local message = tostring(err):match("^[^\n]+") or "unknown error"
+    vim.notify("Failed to load session " .. name .. ": " .. message, vim.log.levels.ERROR)
+    return false
+  end
+  return true
+end
+
+local function prompt_new_session()
+  local default_name = vim.fn.fnamemodify(vim.fn.getcwd(), ":t"):gsub("[^%w._-]", "-")
+  vim.ui.input({ prompt = "Session name: ", default = default_name }, function(name)
+    if name then save_session(name) end
+  end)
+end
+
+local open_sessions
+open_sessions = function()
+  require("fzf-lua").fzf_exec(session_names(), {
+    prompt = "Sessions> ",
+    previewer = false,
+    fzf_opts = {
+      ["--header"] = "Enter: load  Ctrl-n: new  Ctrl-x: delete",
+    },
+    actions = {
+      ["enter"] = function(selected)
+        if selected[1] then load_session(selected[1]) end
+      end,
+      ["ctrl-n"] = function()
+        vim.schedule(prompt_new_session)
+      end,
+      ["ctrl-x"] = function(selected)
+        local name = selected[1]
+        local path = name and session_path(name)
+        if not path then return end
+        local choices = table.concat({ "&Delete", "&Cancel" }, string.char(10))
+        if vim.fn.confirm("Delete session " .. name .. "?", choices, 2) == 1 then
+          vim.fn.delete(path)
+          if active_session == name then active_session = nil end
+          vim.schedule(open_sessions)
+        end
+      end,
+    },
+  })
+end
+
+vim.api.nvim_create_autocmd("SessionLoadPost", {
+  callback = function()
+    local path = vim.fs.normalize(vim.v.this_session)
+    if vim.fn.fnamemodify(path, ":h") == vim.fs.normalize(session_dir) then
+      active_session = vim.fn.fnamemodify(path, ":t:r")
+    end
+  end,
+})
+
+vim.api.nvim_create_autocmd("VimLeavePre", {
+  callback = function()
+    if not active_session then return end
+    local path = session_path(active_session)
+    if path then vim.cmd("mksession! " .. vim.fn.fnameescape(path)) end
+  end,
+})
+
+vim.opt.sessionoptions:remove({ "blank", "help", "terminal" })
+vim.api.nvim_create_user_command("Sessions", open_sessions, { desc = "Manage Neovim sessions" })
+
 -- ╭────────────────────────────────────────────────────────────────────────────╮
 -- │                                SETTINGS                                   │
 -- ╰────────────────────────────────────────────────────────────────────────────╯
@@ -221,7 +339,7 @@ vim.api.nvim_create_autocmd('TextYankPost', {
 
 -- :rough - open/create rough note for today
 vim.api.nvim_create_user_command('Rough', function(opts)
-  local note_dir = notes_dir .. '/ROUGH'
+  local note_dir = '/home/jitesh/Desktop/Notebook/ROUGH'
   local date = os.date('%Y-%m-%d')
   local base_name = 'ROUGH_' .. date
   local pattern = base_name .. '*.md'
@@ -289,7 +407,7 @@ vim.api.nvim_create_user_command('RoughNew', function()
   vim.cmd('Rough new')
 end, { desc = 'Create a new rough note for today' })
 
-local notes_dir = vim.fn.expand('$HOME') .. '/Notebook'
+local notes_dir = '/home/jitesh/Desktop/Notebook'
 
 -- :note - Fuzzy find files or directories depending on whether an argument is provided
 vim.api.nvim_create_user_command('Note', function(opts)
@@ -343,4 +461,5 @@ vim.cmd [[match ExtraWhitespace /\s\+$/]]
 
 -- LSP initialization (placed at end to ensure preferences are loaded)
 require('lsp')
+
 
