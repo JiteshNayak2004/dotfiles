@@ -36,6 +36,13 @@ vim.api.nvim_set_keymap('n', '<leader>f', ':FzfLua buffers<CR>', { noremap = tru
 vim.keymap.set('n', '<M-h>', ':FzfLua<CR>', { noremap = true })
 vim.keymap.set('n', '<M-p>', ':FzfLua oldfiles<CR>', { noremap = true })
 vim.keymap.set('n', '<M-d>', ':FzfLua zoxide<CR>', { noremap = true })
+-- Quickfix nav + toggle (quicker.nvim; toggle warns until :PaqInstall is done)
+vim.keymap.set('n', ']q', '<cmd>cnext<CR>zz', { noremap = true, silent = true, desc = 'Quickfix next' })
+vim.keymap.set('n', '[q', '<cmd>cprev<CR>zz', { noremap = true, silent = true, desc = 'Quickfix prev' })
+vim.keymap.set('n', '<leader>Q', function()
+  local ok, q = pcall(require, 'quicker')
+  if ok then q.toggle() else vim.notify('quicker.nvim not installed yet — run :PaqInstall', vim.log.levels.WARN) end
+end, { desc = 'Toggle quickfix' })
 -- Cycle to the next tab (Meta + j)
 vim.keymap.set('n', '<M-j>', ':tabnext<CR>', { noremap = true, silent = true, desc = 'Next Tab' })
 
@@ -56,6 +63,7 @@ end
 -- ╰────────────────────────────────────────────────────────────────────────────╯
 require('paq') {
   'savq/paq-nvim';
+  'stevearc/oil.nvim';
   'ishan9299/modus-theme-vim';
   'sainnhe/gruvbox-material';
   'rebelot/kanagawa.nvim';
@@ -77,6 +85,7 @@ require('paq') {
   'hrsh7th/cmp-vsnip';
   'hrsh7th/vim-vsnip';
   'tpope/vim-fugitive';
+  'stevearc/quicker.nvim';
   'nvim-lua/plenary.nvim';
   -- 'justinmk/vim-dirvish';
   -- 'roginfarrer/vim-dirvish-dovish';
@@ -91,20 +100,30 @@ require('paq') {
 -- Plugin Configurations
 local actions = require("fzf-lua.actions")
 
-require('fzf-lua').setup({
+require('fzf-lua').setup({ "ivy",
+  -- Pin the new fzf binary (system /usr/bin/fzf is 0.29, too old for live_grep_native)
+  fzf_bin = vim.fn.expand('~/.fzf/bin/fzf'),
+
   -- Disable previewer for buffers
   buffers = {
     previewer = false
   },
 
+  -- NOTE: grep/live_grep/buffers all reuse the `files` action table,
+  -- so Enter + ctrl-q must be defined here (a bare `grep` key is ignored).
   actions = {
     files = {
-      true,
+      ["enter"]  = actions.file_edit_or_qf,
       ["ctrl-q"] = actions.file_sel_to_qf,
+      ["ctrl-s"] = actions.file_split,
+      ["ctrl-v"] = actions.file_vsplit,
+      ["ctrl-t"] = actions.file_tabedit,
     },
-    grep = {
-      ["ctrl-q"] = actions.file_sel_to_qf,
-    },
+  },
+
+  -- allow multi-select so ctrl-q can send several grep hits to the quickfix list
+  grep = {
+    fzf_opts = { ["--multi"] = true },
   },
 })
 
@@ -114,7 +133,12 @@ require('nvim-autopairs').setup()
 require('blame').setup({})
 require('nvim-treesitter.configs').setup({ highlight = { enable = true } })
 require("ibl").setup()
+-- quicker.nvim (safe before :PaqInstall thanks to pcall)
+local ok_quicker, quicker = pcall(require, 'quicker')
+if ok_quicker then quicker.setup({}) end
+-- require('oil').setup() -- temporarily disabled, plugin kept installed
 vim.keymap.set('n', '-', ':NERDTreeToggle<CR>', { noremap = true, desc = 'Toggle Neo-tree' })
+-- vim.keymap.set('n', '-', '<CMD>Oil<CR>', { desc = 'Open parent directory with oil.nvim' }) -- oil trial disabled
 vim.g.NERDTreeMinimalUI = 1
 vim.g.NERDTreeWinSize = 35
 vim.g.NERDTreeUseTCD = 1
