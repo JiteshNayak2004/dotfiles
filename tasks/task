@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+task_repo_dir=$(dirname -- "$(readlink -f -- "${BASH_SOURCE[0]}")")
+task_python="${XDG_DATA_HOME:-$HOME/.local/share}/dotfiles-tasks/venv/bin/python"
+if [[ ! -x "$task_python" ]]; then
+    printf 'Task tool is not installed. Run: %s/install.sh\n' "$task_repo_dir" >&2
+    exit 1
+fi
+exec "$task_python" "$task_repo_dir/tasks.py" "$@"
