@@ -80,6 +80,7 @@ require('paq') {
   'hrsh7th/vim-vsnip';
   'tpope/vim-fugitive';
   'stevearc/quicker.nvim';
+  'kevinhwang91/nvim-bqf';
   'nvim-lua/plenary.nvim';
   -- 'justinmk/vim-dirvish';
   -- 'roginfarrer/vim-dirvish-dovish';
