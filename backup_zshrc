@@ -23,7 +23,7 @@ ZSH_THEME="robbyrussell"
 # POWERLEVEL9K_COLOR_SCHEME="light"
 
 # Modus Dark Colorscheme (Active)
-POWERLEVEL9K_MODE="nerdfont-complete"
+#POWERLEVEL9K_MODE="nerdfont-complete"
 POWERLEVEL9K_LEFT_PROMPT_ELEMENTS=(os_icon context dir newline status)
 POWERLEVEL9K_RIGHT_PROMPT_ELEMENTS=(vcs virtualenv)
 POWERLEVEL9K_SHOW_CHANGESET=true
@@ -38,22 +38,41 @@ plugins=(
   virtualenv
   zsh-syntax-highlighting
   zsh-autosuggestions
+  fzf
 )
 source $ZSH/oh-my-zsh.sh
 
 # Environment variables
-export PATH="$PATH:/home/jitesh/riscv/bin"
-# export PATH="$PATH:/home/jitesh/riscv_binaries/ubuntu-toolchain-az/riscv_toolchain_ubuntu/bin"
-# export PATH="$PATH:/home/jitesh/Desktop/work/incore/misc/bsc/bsc_install/bin"
-export PATH="$PATH:/home/jitesh/Desktop/work/incore/misc/incore_bsv/bsc/bsc-main/inst/bin"
-export PATH="$PATH:/usr/bin/iverilog"
-export PATH="$PATH:/home/jitesh/binaries"
-export PATH="$PATH:/usr/bin/verilator"
-export PATH="$PATH:/usr/local/bin/ctags"
-export PATH="$PATH:/opt/nvim-linux64/bin"
-export PATH="$PATH:/home/jitesh/.local/bin"
-export PATH="$PATH:/home/jitesh/applications/MentorGraphics_QuestaSim/install/questasim/linux_x86_64"
-export LM_LICENSE_FILE="/home/jitesh/applications/MentorGraphics_QuestaSim/install/license.dat"
+# export PATH="$PATH:/home/jitesh/riscv/bin"
+export PATH="$PATH:/home/jitesh/Desktop/incore/tools/riscv/bin"
+export PATH="$PATH:~/.cargo/bin:$PATH"
+export PATH="/home/jitesh/Downloads/surfer/surfer_linux:$PATH"
+export PATH="$PATH:/opt/bsc/bin"
+# export PATH="$PATH:/usr/bin/iverilog"
+export PATH="$PATH:/home/jitesh/Desktop/incore/WORKSPACE/abc"
+
+# export PATH="$PATH:/usr/bin/verilator"
+# export PATH="$PATH:/usr/local/bin/ctags"
+# export PATH="$PATH:/opt/nvim-linux64/bin"
+# export PATH="$PATH:/home/jitesh/.local/bin"
+export PATH="$PATH:/home/jitesh/Desktop/incore/fpga_software/Vivado/2024.2/bin"
+[ -f "$HOME/.config/zsh/dotfiles-secrets.zsh" ] && source "$HOME/.config/zsh/dotfiles-secrets.zsh"
+
+export SG_LICENSE_PATH=/home/jitesh/Desktop/incore/dev_1.lic # including the dev.lic in the path 
+
+
+export NG_LICENSE_PATH=/home/jitesh/Desktop/incore/dev_1.lic
+
+export VERIFIC_LICENSE_FILE=/home/jitesh/Desktop/incore/verific_251112.license
+
+# Verific 2026-03-12 install
+export VERIFIC_INSTALL_DIR="$HOME/.local/lib/verific"
+export LD_LIBRARY_PATH="$VERIFIC_INSTALL_DIR:$LD_LIBRARY_PATH"
+export PYTHONPATH="$VERIFIC_INSTALL_DIR:$PYTHONPATH"
+export LD_PRELOAD="/usr/lib/x86_64-linux-gnu/libtcl8.6.so"
+export SG_LICENSE_PATH="/home/jitesh/Desktop/incore/dev_1.lic"
+
+
 
 # Vim mode in Zsh
 bindkey -v
@@ -76,11 +95,12 @@ alias tls='tmux -u ls'
 alias ta='tmux -u attach -t'
 alias tk='tmux -u kill-session -t'
 alias t='tmux -u'
+alias fd='fdfind'
 # virtual Environment
 export pyvirtualenv=~/pyvirtualenv
 # Create a virtual environment
 makevenv() {
-    python3 -m venv "$pyvirtualenv/$1"
+    python3.10 -m venv "$pyvirtualenv/$1"
     echo "Virtual environment '$1' created at $pyvirtualenv/$1"
 }
 
@@ -157,5 +177,18 @@ echo -ne '\e[5 q' # Use beam shape cursor on startup.
 preexec() { echo -ne '\e[5 q' ;} # Use beam shape cursor for each new prompt.
 
 
+# Ensure fzf keybindings work in Vi mode
+bindkey '^R' fzf-history-widget
+
+export PATH="$HOME/.local/bin:$PATH"
+
+# GTKWave — disable GTK overlay scrollbars and software compositing to fix
+# waveform scroll jitter (GTK3 redraws the entire widget on each scroll event
+# when the compositing backend is active).
+export GTK_OVERLAY_SCROLLING=0
+export GDK_RENDERING=image
+
+# opencode
+export PATH=/home/jitesh/.opencode/bin:$PATH
 
 

@@ -1,4 +1,3 @@
-local lspconfig = require('lspconfig')
 local capabilities = require('cmp_nvim_lsp').default_capabilities()
 local cmp = require('cmp')
 
@@ -104,8 +103,24 @@ cmp.setup({
     }),
 })
 
+-- Command-line completion: buffer words for search, paths and commands for Ex.
+cmp.setup.cmdline({ '/', '?' }, {
+    mapping = cmp.mapping.preset.cmdline(),
+    sources = { { name = 'buffer' } },
+})
+
+cmp.setup.cmdline(':', {
+    mapping = cmp.mapping.preset.cmdline(),
+    sources = cmp.config.sources({
+        { name = 'path' },
+    }, {
+        { name = 'cmdline' },
+    }),
+    matching = { disallow_symbol_nonprefix_matching = false },
+})
+
 -- Optimized Pyright (Python LSP)
-lspconfig.pyright.setup({
+vim.lsp.config('pyright', {
   on_attach = on_attach,
   capabilities = capabilities,
   settings = {
@@ -120,7 +135,7 @@ lspconfig.pyright.setup({
 })
 
 -- Optimized Clangd (C/C++ LSP)
-lspconfig.clangd.setup({
+vim.lsp.config('clangd', {
   cmd = { "clangd", "--background-index", "--clang-tidy", "--completion-style=detailed", "--header-insertion=never" },
   on_attach = on_attach,
   capabilities = capabilities,
@@ -129,6 +144,8 @@ lspconfig.clangd.setup({
     fallbackFlags = { "-std=c++17" },
   },
 })
+
+vim.lsp.enable({ 'pyright', 'clangd' })
 
 -- Add any other LSP servers you need here
 -- This ensures LSP is loaded at the end so you can still use nvim even if LSP has errors

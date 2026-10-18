@@ -12,7 +12,7 @@ vim.keymap.set('n', '<leader>t', '<C-6>', { noremap = true })
 vim.keymap.set('n', '<C-t>', ':tabnew .<CR>', { noremap = true, silent = true })
 vim.keymap.set('n', '<C-a>', 'ggVG', { noremap = true, silent = true, desc = 'Select All' })
 vim.keymap.set('n', '<Esc>', '<cmd>nohlsearch<CR>')
-vim.keymap.set('n', '<leader>cd', ':lcd %:h<CR>', { noremap = true })
+vim.keymap.set('n', '<leader>cd', '<cmd>lcd %:h<CR>', { noremap = true, desc = 'Set cwd to current file directory' })
 
 -- Window movement
 vim.keymap.set('n', '<leader>h', '<C-w>h', { noremap = true })
@@ -23,19 +23,22 @@ vim.keymap.set('n', '<leader>l', '<C-w>l', { noremap = true })
 -- FZF Mappings
 vim.api.nvim_set_keymap('n', '<C-p>', ':FuzzyOpen<CR>', { noremap = true, silent = true })
 -- g synonym for grep 
-vim.api.nvim_set_keymap('n', '<leader>g', ':FzfLua live_grep_native<CR>', { noremap = true, silent = true })
+vim.keymap.set('n', '<leader>g', ':FuzzyGrep<CR> ', { noremap = true })
 -- o synonym for objects 
 vim.api.nvim_set_keymap('n', '<leader>o', ':FzfLua lsp_document_symbols<CR>', { noremap = true, silent = true })
--- wo synonym for workspace objects 
-vim.api.nvim_set_keymap('n', '<leader>O', ':FzfLua lsp_live_workspace_symbols<CR>', { noremap = true, silent = true })
--- wo synonym for recent search
-vim.api.nvim_set_keymap('n', '<C-s>', ':FzfLua search_history<CR>', { noremap = true, silent = true })
 -- wo synonym for recent history
 vim.api.nvim_set_keymap('n', '<C-h>', ':FzfLua command_history<CR>', { noremap = true, silent = true })
 vim.api.nvim_set_keymap('n', '<leader>f', ':FzfLua buffers<CR>', { noremap = true, silent = true })
 vim.keymap.set('n', '<M-h>', ':FzfLua<CR>', { noremap = true })
 vim.keymap.set('n', '<M-p>', ':FzfLua oldfiles<CR>', { noremap = true })
 vim.keymap.set('n', '<M-d>', ':FzfLua zoxide<CR>', { noremap = true })
+-- Quickfix nav + toggle (quicker.nvim; toggle warns until :PaqInstall is done)
+vim.keymap.set('n', ']q', '<cmd>cnext<CR>zz', { noremap = true, silent = true, desc = 'Quickfix next' })
+vim.keymap.set('n', '[q', '<cmd>cprev<CR>zz', { noremap = true, silent = true, desc = 'Quickfix prev' })
+vim.keymap.set('n', '<leader>Q', function()
+  local ok, q = pcall(require, 'quicker')
+  if ok then q.toggle() else vim.notify('quicker.nvim not installed yet — run :PaqInstall', vim.log.levels.WARN) end
+end, { desc = 'Toggle quickfix' })
 -- Cycle to the next tab (Meta + j)
 vim.keymap.set('n', '<M-j>', ':tabnext<CR>', { noremap = true, silent = true, desc = 'Next Tab' })
 
@@ -56,17 +59,16 @@ end
 -- ╰────────────────────────────────────────────────────────────────────────────╯
 require('paq') {
   'savq/paq-nvim';
+  'stevearc/oil.nvim';
   'ishan9299/modus-theme-vim';
   'sainnhe/gruvbox-material';
   'rebelot/kanagawa.nvim';
   'windwp/nvim-autopairs';
   'FabijanZulj/blame.nvim';
-  'sindrets/diffview.nvim';
   { 'nvim-treesitter/nvim-treesitter', build = ':TSUpdate' };
   'junegunn/fzf';
   'ibhagwan/fzf-lua';
   'NeogitOrg/neogit';
-  { 'iamcco/markdown-preview.nvim', build = 'npx --yes yarn@1.22.22 --cwd app install --frozen-lockfile' };
   'rbong/vim-flog';
   'neovim/nvim-lspconfig';
   'hrsh7th/nvim-cmp';
@@ -77,6 +79,7 @@ require('paq') {
   'hrsh7th/cmp-vsnip';
   'hrsh7th/vim-vsnip';
   'tpope/vim-fugitive';
+  'stevearc/quicker.nvim';
   'nvim-lua/plenary.nvim';
   -- 'justinmk/vim-dirvish';
   -- 'roginfarrer/vim-dirvish-dovish';
@@ -84,6 +87,7 @@ require('paq') {
   'preservim/nerdtree';
   'lukas-reineke/indent-blankline.nvim';
   'projekt0n/github-nvim-theme';
+  -- TODO: Fork cloudhead/neovim-fuzzy, upstream the FuzzyGrep argv-quoting fix, and switch this entry to the fork.
   'cloudhead/neovim-fuzzy';
 }
 
@@ -92,19 +96,51 @@ require('paq') {
 local actions = require("fzf-lua.actions")
 
 require('fzf-lua').setup({
-  -- Disable previewer for buffers
-  buffers = {
-    previewer = false
-  },
+  -- Pin the new fzf binary (system /usr/bin/fzf is 0.29, too old for live_grep_native)
+  fzf_bin = vim.fn.expand('~/.fzf/bin/fzf'),
 
+  -- Match the 12-line Ctrl-p (neovim-fuzzy) window, including the M-h menu.
+  winopts = {
+    row = 1,
+    col = 0,
+    width = 1,
+    height = 12,
+    border = "none",
+    title = false,
+    backdrop = 100,
+    treesitter = false,
+    preview = { border = "none", title = false, scrollbar = false },
+  },
+  defaults = {
+    previewer = false,
+    file_icons = false,
+    git_icons = false,
+    color_icons = false,
+    -- Some providers supply a native preview independently of `previewer`.
+    fn_pre_win = function(opts)
+      if opts.previewer == false then
+        opts.preview = nil
+        opts.fzf_opts["--preview"] = nil
+      end
+    end,
+  },
+  builtin = { winopts = { width = 1, height = 12 } },
+
+  -- NOTE: grep/live_grep/buffers all reuse the `files` action table,
+  -- so Enter + ctrl-q must be defined here (a bare `grep` key is ignored).
   actions = {
     files = {
-      true,
+      ["enter"]  = actions.file_edit_or_qf,
       ["ctrl-q"] = actions.file_sel_to_qf,
+      ["ctrl-s"] = actions.file_split,
+      ["ctrl-v"] = actions.file_vsplit,
+      ["ctrl-t"] = actions.file_tabedit,
     },
-    grep = {
-      ["ctrl-q"] = actions.file_sel_to_qf,
-    },
+  },
+
+  -- allow multi-select so ctrl-q can send several grep hits to the quickfix list
+  grep = {
+    fzf_opts = { ["--multi"] = true },
   },
 })
 
@@ -114,7 +150,12 @@ require('nvim-autopairs').setup()
 require('blame').setup({})
 require('nvim-treesitter.configs').setup({ highlight = { enable = true } })
 require("ibl").setup()
-vim.keymap.set('n', '-', ':NERDTreeToggle<CR>', { noremap = true, desc = 'Toggle Neo-tree' })
+-- quicker.nvim (safe before :PaqInstall thanks to pcall)
+local ok_quicker, quicker = pcall(require, 'quicker')
+if ok_quicker then quicker.setup({}) end
+require('oil').setup() -- temporarily disabled, plugin kept installed
+vim.keymap.set('n', '-', ':NERDTreeToggle .<CR>', { noremap = true, desc = 'Toggle NERDTree at cwd' })
+-- vim.keymap.set('n', '-', '<CMD>Oil<CR>', { desc = 'Open parent directory with oil.nvim' }) -- oil trial disabled
 vim.g.NERDTreeMinimalUI = 1
 vim.g.NERDTreeWinSize = 35
 vim.g.NERDTreeUseTCD = 1
@@ -323,6 +364,7 @@ vim.opt.softtabstop = 4
 vim.opt.expandtab = true
 vim.o.clipboard = "unnamedplus"
 
+
 -- netrw settings
 vim.g.netrw_liststyle = 0
 vim.g.netrw_keepdir = 0
@@ -412,10 +454,13 @@ local notes_dir = '/home/jitesh/Desktop/Notebook'
 -- :note - Fuzzy find files or directories depending on whether an argument is provided
 vim.api.nvim_create_user_command('Note', function(opts)
   local arg = opts.args and vim.trim(opts.args) or ''
+  if arg ~= '' and not arg:lower():match('%.md$') then
+    arg = arg .. '.md'
+  end
 
   if arg == '' then
     -- CASE 1: No arguments provided -> Fuzzy find ALL FILES in Notebook (any depth)
-    local items = vim.fn.systemlist(string.format('find %s -type f 2>/dev/null', vim.fn.shellescape(notes_dir)))
+    local items = vim.fn.systemlist(string.format('find %s -type d -name .git -prune -o -type d -name .obsidian -prune -o -type d -iname attachments -prune -o -type f -print 2>/dev/null', vim.fn.shellescape(notes_dir)))
 
     require('fzf-lua').fzf_exec(items, {
       prompt = 'Notes (Files)> ',
@@ -431,7 +476,7 @@ vim.api.nvim_create_user_command('Note', function(opts)
     })
   else
     -- CASE 2: Filename provided -> Fuzzy find ALL DIRECTORIES in Notebook (any depth)
-    local items = vim.fn.systemlist(string.format('find %s -type d 2>/dev/null', vim.fn.shellescape(notes_dir)))
+    local items = vim.fn.systemlist(string.format('find %s -type d -name .git -prune -o -type d -name .obsidian -prune -o -type d -iname attachments -prune -o -type d -print 2>/dev/null', vim.fn.shellescape(notes_dir)))
 
     require('fzf-lua').fzf_exec(items, {
       prompt = 'Notes (Dirs for "' .. arg .. '")> ',
