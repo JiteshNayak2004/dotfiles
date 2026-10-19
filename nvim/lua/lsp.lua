@@ -119,8 +119,26 @@ cmp.setup.cmdline(':', {
     matching = { disallow_symbol_nonprefix_matching = false },
 })
 
+-- vim.lsp.config/enable is Neovim 0.11+; fall back to lspconfig.setup on 0.10
+local supports_lsp_config = vim.fn.has('nvim-0.11') == 1
+
+local function lsp_configure(name, opts)
+  if supports_lsp_config then
+    vim.lsp.config(name, opts)
+  else
+    require('lspconfig')[name].setup(opts)
+  end
+end
+
+local function lsp_enable(names)
+  if supports_lsp_config then
+    vim.lsp.enable(names)
+  end
+  -- On 0.10, lspconfig.setup() already enables the server
+end
+
 -- Optimized Pyright (Python LSP)
-vim.lsp.config('pyright', {
+lsp_configure('pyright', {
   on_attach = on_attach,
   capabilities = capabilities,
   settings = {
@@ -135,7 +153,7 @@ vim.lsp.config('pyright', {
 })
 
 -- Optimized Clangd (C/C++ LSP)
-vim.lsp.config('clangd', {
+lsp_configure('clangd', {
   cmd = { "clangd", "--background-index", "--clang-tidy", "--completion-style=detailed", "--header-insertion=never" },
   on_attach = on_attach,
   capabilities = capabilities,
@@ -145,7 +163,7 @@ vim.lsp.config('clangd', {
   },
 })
 
-vim.lsp.enable({ 'pyright', 'clangd' })
+lsp_enable({ 'pyright', 'clangd' })
 
 -- Add any other LSP servers you need here
 -- This ensures LSP is loaded at the end so you can still use nvim even if LSP has errors

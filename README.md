@@ -26,6 +26,9 @@ The active configs on this machine are symlinked to these repository files:
 | `~/.config/kitty/kitty.conf` | `kitty/kitty.conf` |
 | `~/.config/nvim/init.lua` | `nvim/init.lua` |
 | `~/.config/nvim/lua/lsp.lua` | `nvim/lua/lsp.lua` |
+| `~/.config/nvim/plugin` | `nvim/plugin` |
+| `~/.config/rofi/config.rasi` | `rofi/config.rasi` |
+| `~/.config/rofi/powermenu.sh` | `rofi/powermenu.sh` |
 | `~/.config/Code/User/keybindings.json` | `code_keybinds.json` |
 
 Edits through either path update the tracked file. Review with `git diff`, then
@@ -33,12 +36,25 @@ commit and push as usual. If an application replaces a symlink when saving,
 restore that link before making further edits. Neovim session files are not linked.
 
 Original live files are backed up under
-`~/.local/state/dotfiles-backups/20261018-223633-676643/`.
+`~/.local/state/dotfiles-backups/`.
 The repository versions before importing live configs are preserved in commit
 `cc2a0f7`. These links are local to this machine; cloning the repo does not create them.
 
 Machine-local license keys are loaded from `~/.config/zsh/dotfiles-secrets.zsh`
 and are not stored in this repository.
+
+## Per-machine zsh settings
+
+`backup_zshrc` holds only the shared shell config (prompts, plugins, aliases).
+Machine-specific PATHs and environment variables live in `machines/<hostname>.zsh`
+(tracked, never secrets). At startup the shell sources the file matching
+`hostname`, falling back to `machines/default.zsh` when no match exists, so a
+fresh clone keeps working before any machine file is added. Secrets (tokens,
+license keys) go in the untracked `~/.config/zsh/dotfiles-secrets.zsh`, which
+is sourced last. To onboard a machine, add `machines/<hostname>.zsh` with its
+PATHs and create a local `~/.config/zsh/dotfiles-secrets.zsh` if needed.
+
+The Neovim Notebook path is fixed at `~/Desktop/Notebook` on every machine.
 
 ## Local tasks and reminders
 

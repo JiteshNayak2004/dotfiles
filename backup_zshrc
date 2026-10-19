@@ -23,7 +23,7 @@ ZSH_THEME="robbyrussell"
 # POWERLEVEL9K_COLOR_SCHEME="light"
 
 # Modus Dark Colorscheme (Active)
-#POWERLEVEL9K_MODE="nerdfont-complete"
+# POWERLEVEL9K_MODE is set per machine in machines/<hostname>.zsh
 POWERLEVEL9K_LEFT_PROMPT_ELEMENTS=(os_icon context dir newline status)
 POWERLEVEL9K_RIGHT_PROMPT_ELEMENTS=(vcs virtualenv)
 POWERLEVEL9K_SHOW_CHANGESET=true
@@ -42,38 +42,6 @@ plugins=(
 )
 source $ZSH/oh-my-zsh.sh
 
-# Environment variables
-# export PATH="$PATH:/home/jitesh/riscv/bin"
-export PATH="$PATH:/home/jitesh/Desktop/incore/tools/riscv/bin"
-export PATH="$PATH:~/.cargo/bin:$PATH"
-export PATH="/home/jitesh/Downloads/surfer/surfer_linux:$PATH"
-export PATH="$PATH:/opt/bsc/bin"
-# export PATH="$PATH:/usr/bin/iverilog"
-export PATH="$PATH:/home/jitesh/Desktop/incore/WORKSPACE/abc"
-
-# export PATH="$PATH:/usr/bin/verilator"
-# export PATH="$PATH:/usr/local/bin/ctags"
-# export PATH="$PATH:/opt/nvim-linux64/bin"
-# export PATH="$PATH:/home/jitesh/.local/bin"
-export PATH="$PATH:/home/jitesh/Desktop/incore/fpga_software/Vivado/2024.2/bin"
-[ -f "$HOME/.config/zsh/dotfiles-secrets.zsh" ] && source "$HOME/.config/zsh/dotfiles-secrets.zsh"
-
-export SG_LICENSE_PATH=/home/jitesh/Desktop/incore/dev_1.lic # including the dev.lic in the path 
-
-
-export NG_LICENSE_PATH=/home/jitesh/Desktop/incore/dev_1.lic
-
-export VERIFIC_LICENSE_FILE=/home/jitesh/Desktop/incore/verific_251112.license
-
-# Verific 2026-03-12 install
-export VERIFIC_INSTALL_DIR="$HOME/.local/lib/verific"
-export LD_LIBRARY_PATH="$VERIFIC_INSTALL_DIR:$LD_LIBRARY_PATH"
-export PYTHONPATH="$VERIFIC_INSTALL_DIR:$PYTHONPATH"
-export LD_PRELOAD="/usr/lib/x86_64-linux-gnu/libtcl8.6.so"
-export SG_LICENSE_PATH="/home/jitesh/Desktop/incore/dev_1.lic"
-
-
-
 # Vim mode in Zsh
 bindkey -v
 export KEYTIMEOUT=1
@@ -86,7 +54,7 @@ eval "$(fasd --init auto)"
 # Key bindings
 zle -N accept-current-completion
 bindkey '^l' autosuggest-accept
-# fuzzy file search 
+# fuzzy file search
 
 # Aliases
 # tmux
@@ -95,12 +63,16 @@ alias tls='tmux -u ls'
 alias ta='tmux -u attach -t'
 alias tk='tmux -u kill-session -t'
 alias t='tmux -u'
+alias spotify='spotify --audio-api=pulseaudio'
+alias cat='bat'
 alias fd='fdfind'
 # virtual Environment
 export pyvirtualenv=~/pyvirtualenv
+# Python used to create virtual environments (overridable per machine)
+export VENV_PYTHON="${VENV_PYTHON:-python3}"
 # Create a virtual environment
 makevenv() {
-    python3.10 -m venv "$pyvirtualenv/$1"
+    $VENV_PYTHON -m venv "$pyvirtualenv/$1"
     echo "Virtual environment '$1' created at $pyvirtualenv/$1"
 }
 
@@ -131,7 +103,10 @@ alias gs="git status"
 alias gc="git commit"
 alias ga="git add ."
 alias gp="git push origin main"
-alias v="nvim"
+alias l="ls"
+alias vf='sf -e nvim' # quick opening files with vim
+alias v='nvim' # quick opening files with vim
+alias o='a -e xdg-open' # quick opening files with xdg-open
 alias py="python3"
 alias c="clear"
 alias scratchpad="nvim ~/scratchpad"
@@ -142,11 +117,10 @@ alias displaymanager="sudo vim /etc/gdm3/custom.conf"
 alias config_update="~/update.sh"
 alias lg="lazygit"
 
+alias hs='print -z -- "$(fc -rl 1 | fzf | awk '\''{$1=""; sub(/^ /,""); print}'\'')"'
+
 # conda setup
 alias condasetup='source ~/miniconda3/etc/profile.d/conda.sh && conda activate base'
-
-
-
 
 # Conditional prompt customization
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
@@ -176,19 +150,41 @@ zle -N zle-line-init
 echo -ne '\e[5 q' # Use beam shape cursor on startup.
 preexec() { echo -ne '\e[5 q' ;} # Use beam shape cursor for each new prompt.
 
-
 # Ensure fzf keybindings work in Vi mode
 bindkey '^R' fzf-history-widget
 
-export PATH="$HOME/.local/bin:$PATH"
-
-# GTKWave — disable GTK overlay scrollbars and software compositing to fix
-# waveform scroll jitter (GTK3 redraws the entire widget on each scroll event
-# when the compositing backend is active).
-export GTK_OVERLAY_SCROLLING=0
-export GDK_RENDERING=image
+# nvm loader
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
 
 # opencode
 export PATH=/home/jitesh/.opencode/bin:$PATH
 
+# fzf terminal integration (prefers ~/.fzf/bin 0.67 over system 0.29)
+export PATH="$HOME/.fzf/bin:$PATH"
+export FZF_DEFAULT_COMMAND='fd --type f --hidden --follow --exclude .git 2>/dev/null || rg --files --hidden -g "!.git" 2>/dev/null'
+export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
+export FZF_ALT_C_COMMAND='fd --type d --hidden --follow --exclude .git 2>/dev/null || find . -type d 2>/dev/null'
+export FZF_DEFAULT_OPTS='--height 40% --reverse --border --multi --info=inline'
+# free Ctrl-S / Ctrl-Q from XON/XOFF flow control so they reach fzf/nvim
+[[ -t 0 ]] && stty -ixon 2>/dev/null
+[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
 
+# ---------------------------------------------------------------------------
+# Machine-specific settings: PATHs and env live in machines/<hostname>.zsh
+# (tracked per machine, no secrets). Falls back to machines/default.zsh.
+# Machine-local credentials live in ~/.config/zsh/dotfiles-secrets.zsh,
+# which is never tracked in this repository.
+# ---------------------------------------------------------------------------
+_zsh_self="${(%):-%x}"
+[[ -L "$_zsh_self" ]] && _zsh_self="$(readlink -f "$_zsh_self")"
+_machines_dir="${_zsh_self:h}/machines"
+if [[ -f "$_machines_dir/${(%):-%m}.zsh" ]]; then
+  source "$_machines_dir/${(%):-%m}.zsh"
+elif [[ -f "$_machines_dir/default.zsh" ]]; then
+  source "$_machines_dir/default.zsh"
+fi
+unset _zsh_self _machines_dir
+
+[ -f "$HOME/.config/zsh/dotfiles-secrets.zsh" ] && source "$HOME/.config/zsh/dotfiles-secrets.zsh"
