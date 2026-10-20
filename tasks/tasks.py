@@ -333,6 +333,11 @@ def main():
     args = parser.parse_args()
     if args.sentence and (args.path or args.sync or args.daemon or args.upcoming):
         parser.error("Do not combine a task sentence with a service option.")
+    # Other tools probe the executable named "task" as if it were Taskwarrior.
+    # Reject configuration commands before they can become checklist entries.
+    words = " ".join(args.sentence).split()
+    if any(word.startswith(("rc.", "rc:")) for word in words) or words[:2] == ["show", "data.location"]:
+        parser.error("This is the dotfiles task tool, not Taskwarrior; configuration queries are unsupported.")
     root = Path(os.environ.get("TASKS_DIR", Path(os.environ.get("XDG_DATA_HOME", Path.home() / ".local/share")) / "tasks"))
     store, now = Store(root.expanduser().resolve()), now_local()
     try:

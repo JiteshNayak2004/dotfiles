@@ -88,8 +88,7 @@ require('paq') {
   'preservim/nerdtree';
   'lukas-reineke/indent-blankline.nvim';
   'projekt0n/github-nvim-theme';
-  -- TODO: Fork cloudhead/neovim-fuzzy, upstream the FuzzyGrep argv-quoting fix, and switch this entry to the fork.
-  'cloudhead/neovim-fuzzy';
+  'JiteshNayak2004/neovim-fuzzy';
 }
 
 
