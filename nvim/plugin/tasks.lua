@@ -2,6 +2,8 @@
 local executable = vim.fn.expand('~/.local/bin/task')
 local data_home = vim.env.XDG_DATA_HOME or (vim.env.HOME .. '/.local/share')
 local root = vim.fs.normalize(vim.env.TASKS_DIR or (data_home .. '/tasks'))
+local status_buf
+local refresh_status
 
 local function is_task_buffer(buf)
   local path = vim.api.nvim_buf_get_name(buf)
@@ -34,10 +36,36 @@ local function run(args)
   return vim.trim(result.stdout or '')
 end
 
+local function change_task(args)
+  for _, buf in ipairs(vim.api.nvim_list_bufs()) do
+    if is_task_buffer(buf) and vim.bo[buf].modified then
+      vim.notify('Save your task checklist edits before changing tasks from the agenda.', vim.log.levels.WARN)
+      return nil
+    end
+  end
+  local message = run(args)
+  if message then
+    for _, buf in ipairs(vim.api.nvim_list_bufs()) do
+      if vim.api.nvim_buf_is_loaded(buf) and is_task_buffer(buf) then
+        vim.api.nvim_buf_call(buf, function() vim.cmd('checktime') end)
+      end
+    end
+  end
+  return message
+end
+
 vim.api.nvim_create_user_command('Task', function(opts)
   if opts.args ~= '' then
-    local message = run({ opts.args })
-    if message then vim.notify(message) end
+    local message
+    if vim.trim(opts.args):sub(1, 1) == '@' then
+      message = change_task({ opts.args })
+    else
+      message = run({ opts.args })
+    end
+    if message then
+      vim.notify(message)
+      if vim.api.nvim_get_current_buf() == status_buf then refresh_status() end
+    end
   else
     local path = run({ '--path' })
     if path and path ~= '' then
@@ -46,7 +74,7 @@ vim.api.nvim_create_user_command('Task', function(opts)
       remember(vim.api.nvim_get_current_buf())
     end
   end
-end, { nargs = '*', desc = 'Add a task, or open today’s checklist' })
+end, { nargs = '*', desc = 'Add a task, reschedule with @ID @time, or open today’s checklist' })
 
 local group = vim.api.nvim_create_augroup('DotfilesTasks', { clear = true })
 vim.api.nvim_create_autocmd({ 'BufReadPost', 'FileChangedShellPost' }, {
@@ -92,12 +120,11 @@ vim.api.nvim_create_autocmd({ 'FocusGained', 'BufEnter', 'CursorHold' }, {
   end,
 })
 
-local status_buf
 local status_rows = {}
 local status_namespace = vim.api.nvim_create_namespace('DotfilesTaskStatus')
 local status_window_options = {}
 
-local function refresh_status()
+refresh_status = function()
   local output = run({ '--upcoming' })
   if not output then return false end
   local ok, agenda = pcall(vim.json.decode, output)
@@ -131,7 +158,8 @@ local function refresh_status()
     append('No unfinished tasks in the next seven days.', 'Comment')
     append('')
   end
-  append('Enter: open task   r: refresh   q: close', 'Comment')
+  append('Enter: open   x: done   dd: delete   r: refresh   q: close', 'Comment')
+  append(':Task @ID @10m  reschedule (also @1d 10:00, @2h)', 'Comment')
   vim.bo[status_buf].readonly = false
   vim.bo[status_buf].modifiable = true
   vim.api.nvim_buf_set_lines(status_buf, 0, -1, false, lines)
@@ -176,6 +204,20 @@ local function open_status_task()
   vim.notify('The task moved while opening it; refresh the agenda.', vim.log.levels.WARN)
 end
 
+local function status_action(action)
+  local selected = status_rows[vim.api.nvim_win_get_cursor(0)[1]]
+  if not selected then return end
+  if action == 'delete' then
+    local choice = vim.fn.confirm(string.format('Delete task #%d: %s?', selected.id, selected.title), '&Delete\n&Cancel', 2)
+    if choice ~= 1 then return end
+  end
+  local message = change_task({ '--' .. action, tostring(selected.id) })
+  if message then
+    vim.notify(message)
+    refresh_status()
+  end
+end
+
 vim.api.nvim_create_user_command('TaskStatus', function()
   if not status_buf or not vim.api.nvim_buf_is_valid(status_buf) then
     status_buf = vim.api.nvim_create_buf(false, true)
@@ -187,6 +229,8 @@ vim.api.nvim_create_user_command('TaskStatus', function()
     vim.bo[status_buf].modifiable = false
     status_rows = {}
     vim.keymap.set('n', '<CR>', open_status_task, { buffer = status_buf, desc = 'Open original task' })
+    vim.keymap.set('n', 'x', function() status_action('done') end, { buffer = status_buf, desc = 'Mark task done' })
+    vim.keymap.set('n', 'dd', function() status_action('delete') end, { buffer = status_buf, desc = 'Delete task' })
     vim.keymap.set('n', 'r', refresh_status, { buffer = status_buf, desc = 'Refresh agenda' })
     vim.keymap.set('n', 'q', function() vim.api.nvim_buf_delete(status_buf, {}) end, { buffer = status_buf, desc = 'Close agenda' })
     vim.api.nvim_create_autocmd('BufEnter', {

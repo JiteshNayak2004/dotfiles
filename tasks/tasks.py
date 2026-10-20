@@ -218,6 +218,26 @@ class Store:
             self.write(tasks, originals, extras, state, now)
             return task
 
+    def edit(self, ident, action, now, due=None):
+        with self.locked():
+            tasks, originals, extras, state = self.read(now)
+            index = next((i for i, task in enumerate(tasks) if task.id == ident), None)
+            if index is None:
+                raise ValueError(f"Task #{ident} does not exist.")
+            task = tasks[index]
+            if action == "delete":
+                del tasks[index]
+            elif task.done:
+                raise ValueError(f"Task #{ident} is already done.")
+            elif action == "done":
+                tasks[index] = replace(task, done=True)
+            elif action == "reschedule" and due is not None:
+                tasks[index] = replace(task, due=due, day=due.date().isoformat())
+            else:
+                raise ValueError("Unknown task edit.")
+            state['notified'].pop(str(ident), None)
+            self.write(tasks, originals, extras, state, now)
+
     def due(self, now):
         with self.locked():
             tasks, originals, extras, state = self.read(now)
@@ -329,9 +349,11 @@ def main():
     mode.add_argument("--sync", action="store_true", help="Apply saved checklist edits and roll unfinished tasks forward")
     mode.add_argument("--daemon", action="store_true", help="Run the background reminder service")
     mode.add_argument("--upcoming", action="store_true", help="Print unfinished tasks through the next seven days as JSON")
-    parser.add_argument("sentence", nargs="*", help="Task title, optionally followed by @time")
+    mode.add_argument("--done", type=int, metavar="ID", help="Mark a task done")
+    mode.add_argument("--delete", type=int, metavar="ID", help="Delete a task")
+    parser.add_argument("sentence", nargs="*", help="Task title with optional @time, or @ID @time to reschedule")
     args = parser.parse_args()
-    if args.sentence and (args.path or args.sync or args.daemon or args.upcoming):
+    if args.sentence and (args.path or args.sync or args.daemon or args.upcoming or args.done is not None or args.delete is not None):
         parser.error("Do not combine a task sentence with a service option.")
     # Other tools probe the executable named "task" as if it were Taskwarrior.
     # Reject configuration commands before they can become checklist entries.
@@ -341,7 +363,20 @@ def main():
     root = Path(os.environ.get("TASKS_DIR", Path(os.environ.get("XDG_DATA_HOME", Path.home() / ".local/share")) / "tasks"))
     store, now = Store(root.expanduser().resolve()), now_local()
     try:
-        if args.daemon:
+        sentence = " ".join(args.sentence).strip()
+        if args.done is not None or args.delete is not None:
+            ident = args.done if args.done is not None else args.delete
+            action = "done" if args.done is not None else "delete"
+            store.edit(ident, action, now)
+            print(f"Task #{ident}: {action}.")
+        elif sentence.startswith('@'):
+            match = re.fullmatch(r"@(\d+)\s+@(.+)", sentence)
+            if not match:
+                raise ValueError("Reschedule with @ID @time, for example @23 @10m. " + TIME_HELP)
+            ident, due = int(match[1]), parse_reminder(match[2], now)
+            store.edit(ident, "reschedule", now, due)
+            print(f"Rescheduled #{ident}: {due.strftime('%a %d %b %Y, %H:%M:%S %Z')}")
+        elif args.daemon:
             daemon(store)
         elif args.upcoming:
             print(json.dumps(store.upcoming(now)))
