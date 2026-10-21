@@ -21,6 +21,7 @@ vim.keymap.set('n', '<leader>k', '<C-w>k', { noremap = true })
 vim.keymap.set('n', '<leader>l', '<C-w>l', { noremap = true })
 
 -- FZF Mappings
+vim.g.fuzzy_executable = vim.fn.expand('~/.local/bin/fzy')
 vim.api.nvim_set_keymap('n', '<C-p>', ':FuzzyOpen<CR>', { noremap = true, silent = true })
 -- g synonym for grep 
 vim.keymap.set('n', '<leader>g', ':FuzzyGrep<CR> ', { noremap = true })
@@ -80,7 +81,7 @@ require('paq') {
   'hrsh7th/vim-vsnip';
   'tpope/vim-fugitive';
   'stevearc/quicker.nvim';
-  'kevinhwang91/nvim-bqf';
+--  'kevinhwang91/nvim-bqf';
   'nvim-lua/plenary.nvim';
   -- 'justinmk/vim-dirvish';
   -- 'roginfarrer/vim-dirvish-dovish';
@@ -96,8 +97,8 @@ require('paq') {
 local actions = require("fzf-lua.actions")
 
 require('fzf-lua').setup({
-  -- Pin the new fzf binary (system /usr/bin/fzf is 0.29, too old for live_grep_native)
-  fzf_bin = vim.fn.expand('~/.fzf/bin/fzf'),
+  -- Use the fzf binary installed by Paq.
+  fzf_bin = vim.fn.stdpath('data') .. '/site/pack/paqs/start/fzf/bin/fzf',
 
   -- Match the 12-line Ctrl-p (neovim-fuzzy) window, including the M-h menu.
   winopts = {
