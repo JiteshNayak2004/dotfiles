@@ -154,50 +154,9 @@ require("ibl").setup()
 -- quicker.nvim (safe before :PaqInstall thanks to pcall)
 local ok_quicker, quicker = pcall(require, 'quicker')
 if ok_quicker then quicker.setup({}) end
-local function toggle_oil()
-  local windows = vim.api.nvim_tabpage_list_wins(0)
-  for _, win in ipairs(windows) do
-    if vim.bo[vim.api.nvim_win_get_buf(win)].filetype == 'oil' then
-      if #windows == 1 then
-        require('oil').close()
-      else
-        vim.api.nvim_win_close(win, false)
-      end
-      return
-    end
-  end
-  local target = vim.api.nvim_get_current_win()
-  vim.cmd('botright 12Oil')
-  vim.w.oil_picker_target = target
-end
-
-local function select_oil_entry()
-  local oil_win = vim.api.nvim_get_current_win()
-  local target = vim.w.oil_picker_target
-  require('oil').select({
-    handle_buffer_callback = function(buf)
-      local is_directory = vim.api.nvim_buf_get_name(buf):sub(-1) == '/'
-      if not is_directory and target and vim.api.nvim_win_is_valid(target) then
-        vim.api.nvim_set_current_win(target)
-        vim.cmd.buffer(buf)
-        if vim.api.nvim_win_is_valid(oil_win) then
-          vim.api.nvim_win_close(oil_win, false)
-        end
-      else
-        vim.cmd.buffer(buf)
-      end
-    end,
-  })
-end
-
-require('oil').setup({
-  keymaps = {
-    ['<CR>'] = { callback = select_oil_entry, mode = 'n', desc = 'Open file in editing window' },
-    ['u'] = { 'actions.parent', mode = 'n' },
-    ['-'] = { callback = toggle_oil, mode = 'n', desc = 'Close Oil' },
-  },
-})
-vim.keymap.set('n', '-', toggle_oil, { desc = 'Toggle Oil bottom split' })
+require('oil').setup() -- temporarily disabled, plugin kept installed
+vim.keymap.set('n', '-', ':NERDTreeToggle .<CR>', { noremap = true, desc = 'Toggle NERDTree at cwd' })
+-- vim.keymap.set('n', '-', '<CMD>Oil<CR>', { desc = 'Open parent directory with oil.nvim' }) -- oil trial disabled
 vim.g.NERDTreeMinimalUI = 1
 vim.g.NERDTreeWinSize = 35
 vim.g.NERDTreeUseTCD = 1
