@@ -154,22 +154,9 @@ require("ibl").setup()
 -- quicker.nvim (safe before :PaqInstall thanks to pcall)
 local ok_quicker, quicker = pcall(require, 'quicker')
 if ok_quicker then quicker.setup({}) end
-require('oil').setup({
-  float = {
-    border = "none",
-    -- Match the full-width, 12-line picker layout when using :Oil --float.
-    override = function(conf)
-      local available_height = math.max(1, vim.o.lines - vim.o.cmdheight - 1)
-      conf.width = vim.o.columns
-      conf.height = math.min(12, available_height)
-      conf.row = available_height - conf.height
-      conf.col = 0
-      return conf
-    end,
-  },
-})
-vim.keymap.set('n', '-', ':NERDTreeToggle .<CR>', { noremap = true, desc = 'Toggle NERDTree at cwd' })
--- vim.keymap.set('n', '-', '<CMD>Oil<CR>', { desc = 'Open parent directory with oil.nvim' }) -- oil trial disabled
+require('oil').setup()
+-- Open Oil as a regular bottom split, matching the 12-line picker height.
+vim.keymap.set('n', '-', '<CMD>botright 12Oil<CR>', { desc = 'Open Oil in bottom split' })
 vim.g.NERDTreeMinimalUI = 1
 vim.g.NERDTreeWinSize = 35
 vim.g.NERDTreeUseTCD = 1
