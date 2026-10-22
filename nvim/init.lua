@@ -154,9 +154,28 @@ require("ibl").setup()
 -- quicker.nvim (safe before :PaqInstall thanks to pcall)
 local ok_quicker, quicker = pcall(require, 'quicker')
 if ok_quicker then quicker.setup({}) end
-require('oil').setup()
--- Open Oil as a regular bottom split, matching the 12-line picker height.
-vim.keymap.set('n', '-', '<CMD>botright 12Oil<CR>', { desc = 'Open Oil in bottom split' })
+local function toggle_oil()
+  local windows = vim.api.nvim_tabpage_list_wins(0)
+  for _, win in ipairs(windows) do
+    if vim.bo[vim.api.nvim_win_get_buf(win)].filetype == 'oil' then
+      if #windows == 1 then
+        require('oil').close()
+      else
+        vim.api.nvim_win_close(win, false)
+      end
+      return
+    end
+  end
+  vim.cmd('botright 12Oil')
+end
+
+require('oil').setup({
+  keymaps = {
+    ['u'] = { 'actions.parent', mode = 'n' },
+    ['-'] = { callback = toggle_oil, mode = 'n', desc = 'Close Oil' },
+  },
+})
+vim.keymap.set('n', '-', toggle_oil, { desc = 'Toggle Oil bottom split' })
 vim.g.NERDTreeMinimalUI = 1
 vim.g.NERDTreeWinSize = 35
 vim.g.NERDTreeUseTCD = 1
