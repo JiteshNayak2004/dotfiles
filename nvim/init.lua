@@ -70,6 +70,7 @@ require('paq') {
   'junegunn/fzf';
   'ibhagwan/fzf-lua';
   'NeogitOrg/neogit';
+  'FylerOrg/fyler.nvim';
   'rbong/vim-flog';
   'neovim/nvim-lspconfig';
   'hrsh7th/nvim-cmp';
@@ -154,6 +155,7 @@ require("ibl").setup()
 -- quicker.nvim (safe before :PaqInstall thanks to pcall)
 local ok_quicker, quicker = pcall(require, 'quicker')
 if ok_quicker then quicker.setup({}) end
+require('fyler').setup({})
 require('oil').setup() -- temporarily disabled, plugin kept installed
 vim.keymap.set('n', '-', ':NERDTreeToggle .<CR>', { noremap = true, desc = 'Toggle NERDTree at cwd' })
 -- vim.keymap.set('n', '-', '<CMD>Oil<CR>', { desc = 'Open parent directory with oil.nvim' }) -- oil trial disabled
