@@ -36,11 +36,15 @@ source ~/applications/powerlevel10k/powerlevel10k.zsh-theme
 plugins=(
   git
   virtualenv
-  zsh-syntax-highlighting
-  zsh-autosuggestions
   fzf
+  fzf-tab
+  zsh-autosuggestions
+  zsh-syntax-highlighting
 )
 source $ZSH/oh-my-zsh.sh
+# Let fzf-tab display completion candidates instead of Oh My Zsh's menu.
+zstyle ':completion:*:*:*:*:*' menu no
+zstyle ':completion:*:descriptions' format '[%d]'
 
 # Vim mode in Zsh
 bindkey -v
