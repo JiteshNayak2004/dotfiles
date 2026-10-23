@@ -155,9 +155,24 @@ require("ibl").setup()
 -- quicker.nvim (safe before :PaqInstall thanks to pcall)
 local ok_quicker, quicker = pcall(require, 'quicker')
 if ok_quicker then quicker.setup({}) end
-require('fyler').setup({})
+require('fyler').setup({
+  kind = 'split_left_most',
+  kind_presets = { split_left_most = { width = 35 } },
+  follow_current_file = false,
+  follow_root_dir = false,
+  mappings = {
+    n = {
+      ['-'] = { action = 'close', desc = 'Close Fyler' },
+      ['u'] = { action = 'visit', args = { parent = true }, desc = 'Go to parent directory' },
+      ['<CR>'] = { action = 'select', args = { pick = false } },
+      ['<2-LeftMouse>'] = { action = 'select', args = { pick = false } },
+    },
+  },
+})
 require('oil').setup() -- temporarily disabled, plugin kept installed
-vim.keymap.set('n', '-', ':NERDTreeToggle .<CR>', { noremap = true, desc = 'Toggle NERDTree at cwd' })
+vim.keymap.set('n', '-', function()
+  require('fyler').toggle({ root_path = vim.fn.getcwd() })
+end, { desc = 'Toggle Fyler at cwd' })
 -- vim.keymap.set('n', '-', '<CMD>Oil<CR>', { desc = 'Open parent directory with oil.nvim' }) -- oil trial disabled
 vim.g.NERDTreeMinimalUI = 1
 vim.g.NERDTreeWinSize = 35
