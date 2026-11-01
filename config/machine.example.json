@@ -1,0 +1,19 @@
+{
+  "notebook_dir": "~/Desktop/Notebook",
+  "tasks_dir": "~/.local/share/tasks",
+  "firefox_profile": "~/snap/firefox/common/.mozilla/firefox/CHOOSE-YOUR-PROFILE",
+  "components": [
+    "shell",
+    "terminal",
+    "nvim",
+    "editors",
+    "desktop",
+    "tasks",
+    "gnome",
+    "firefox"
+  ],
+  "path_dirs": [],
+  "env": {},
+  "lg_monitor": false,
+  "hardware_settings": false
+}

@@ -1,3 +1,12 @@
+-- Machine-local paths also work when Neovim starts outside a shell.
+local machine_paths = {}
+local paths_file = (vim.env.XDG_CONFIG_HOME or (vim.env.HOME .. '/.config')) .. '/dotfiles/paths.json'
+if vim.fn.filereadable(paths_file) == 1 then
+  local ok, value = pcall(vim.fn.json_decode, table.concat(vim.fn.readfile(paths_file), '\n'))
+  if ok and type(value) == 'table' then machine_paths = value end
+end
+local notes_dir = machine_paths.notebook_dir or vim.env.NOTEBOOK_DIR or (vim.env.HOME .. '/Desktop/Notebook')
+
 -- ╭────────────────────────────────────────────────────────────────────────────╮
 -- │                          LEADER AND KEYBINDINGS                            │
 -- ╰────────────────────────────────────────────────────────────────────────────╯
@@ -21,7 +30,7 @@ vim.keymap.set('n', '<leader>k', '<C-w>k', { noremap = true })
 vim.keymap.set('n', '<leader>l', '<C-w>l', { noremap = true })
 
 -- FZF Mappings
-vim.g.fuzzy_executable = vim.fn.expand('~/.local/bin/fzy')
+vim.g.fuzzy_executable = 'fzy'
 vim.api.nvim_set_keymap('n', '<C-p>', ':FuzzyOpen<CR>', { noremap = true, silent = true })
 -- g synonym for grep 
 vim.keymap.set('n', '<leader>g', ':FuzzyGrep<CR> ', { noremap = true })
@@ -60,6 +69,7 @@ end
 -- ╰────────────────────────────────────────────────────────────────────────────╯
 require('paq') {
   'savq/paq-nvim';
+  'stevearc/oil.nvim';
   'ishan9299/modus-theme-vim';
   'sainnhe/gruvbox-material';
   'rebelot/kanagawa.nvim';
@@ -398,7 +408,8 @@ vim.api.nvim_create_autocmd('TextYankPost', {
 
 -- :rough - open/create rough note for today
 vim.api.nvim_create_user_command('Rough', function(opts)
-  local note_dir = '/home/jitesh/Desktop/Notebook/ROUGH'
+  local note_dir = notes_dir .. '/ROUGH'
+  vim.fn.mkdir(note_dir, 'p')
   local date = os.date('%Y-%m-%d')
   local base_name = 'ROUGH_' .. date
   local pattern = base_name .. '*.md'
@@ -458,7 +469,7 @@ vim.api.nvim_create_user_command('Rough', function(opts)
     end
   end
 
-  vim.cmd('edit ' .. filename)
+  vim.cmd('edit ' .. vim.fn.fnameescape(filename))
 end, { nargs = '?', complete = function() return { 'new' } end, desc = 'Open/create rough note for today' })
 
 -- :rough new - create new rough note
@@ -466,10 +477,13 @@ vim.api.nvim_create_user_command('RoughNew', function()
   vim.cmd('Rough new')
 end, { desc = 'Create a new rough note for today' })
 
-local notes_dir = '/home/jitesh/Desktop/Notebook'
 
 -- :note - Fuzzy find files or directories depending on whether an argument is provided
 vim.api.nvim_create_user_command('Note', function(opts)
+  if vim.fn.isdirectory(notes_dir) == 0 then
+    vim.notify('Notebook directory missing: ' .. notes_dir .. '; run dotfiles configure', vim.log.levels.ERROR)
+    return
+  end
   local arg = opts.args and vim.trim(opts.args) or ''
   if arg ~= '' and not arg:lower():match('%.md$') then
     arg = arg .. '.md'

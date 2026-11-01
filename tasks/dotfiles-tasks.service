@@ -4,6 +4,7 @@ After=graphical-session.target
 PartOf=graphical-session.target
 
 [Service]
+EnvironmentFile=-%E/dotfiles/tasks.env
 Type=simple
 ExecStart=%h/.local/bin/task --daemon
 Restart=on-failure

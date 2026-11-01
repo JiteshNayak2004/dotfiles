@@ -1,0 +1,19 @@
+{
+  "nvim-x86_64": {
+    "url": "https://github.com/neovim/neovim/releases/download/v0.11.7/nvim-linux-x86_64.tar.gz",
+    "sha256": "38a7c6317f94503841096c00e8fde05ef04b9472fc9d7d62b6e033cecd6f7991",
+    "directory": "nvim-v0.11.7-x86_64",
+    "binary": "nvim-linux-x86_64/bin/nvim"
+  },
+  "nvim-aarch64": {
+    "url": "https://github.com/neovim/neovim/releases/download/v0.11.7/nvim-linux-arm64.tar.gz",
+    "sha256": "99bb3c53604e83ce18fc0b459e34cf1a5e212f4e5fbe2eb136b3c18092ae9905",
+    "directory": "nvim-v0.11.7-aarch64",
+    "binary": "nvim-linux-arm64/bin/nvim"
+  },
+  "font": {
+    "url": "https://github.com/ryanoasis/nerd-fonts/releases/download/v3.4.0/JetBrainsMono.tar.xz",
+    "sha256": "ef552a3e638f25125c6ad4c51176a6adcdce295ab1d2ffacf0db060caf8c1582",
+    "directory": "JetBrainsMono-v3.4.0"
+  }
+}

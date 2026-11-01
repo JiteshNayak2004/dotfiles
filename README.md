@@ -1,54 +1,143 @@
-# dotfiles
-collection of all my dotfiles to replicate setup 
+# Dotfiles
 
-## Additional captured configuration
+Shared Linux configuration with a repository-local setup tool. No Stow required.
 
-Missing shared configs, scripts, GNOME settings, and Firefox customizations are
-now tracked. See [the configuration inventory](docs/configuration-inventory.md)
-for destination paths, dependencies, machine-specific settings, and remaining
-Firefox extension exports. These new files are not automatically deployed yet.
-The current GNOME extension inventory is in [gnome/extensions.json](gnome/extensions.json).
+## Set up another machine
 
-## Live configuration links
+Supported baseline: Ubuntu 24.04, GNOME Shell 46, system Python 3.12+.
+File-only components can also be applied on other Linux systems with dependencies
+installed manually. Windows/macOS and newer GNOME settings are not validated.
 
-The active configs on this machine are symlinked to these repository files:
+Clone the repo, sync your Notebook directory separately, launch Firefox once to
+create its profile, then close Firefox and run from a GNOME terminal:
 
-| Active path | Repository file |
-| --- | --- |
-| `~/.zshrc` | `backup_zshrc` |
-| `~/.tmux.conf` | `.tmux.conf` |
-| `~/.config/kitty/kitty.conf` | `kitty/kitty.conf` |
-| `~/.config/nvim/init.lua` | `nvim/init.lua` |
-| `~/.config/nvim/lua/lsp.lua` | `nvim/lua/lsp.lua` |
-| `~/.config/nvim/plugin` | `nvim/plugin` |
-| `~/.config/rofi/config.rasi` | `rofi/config.rasi` |
-| `~/.config/rofi/powermenu.sh` | `rofi/powermenu.sh` |
-| `~/.config/Code/User/keybindings.json` | `code_keybinds.json` |
+```sh
+git clone https://github.com/JiteshNayak2004/dotfiles.git
+cd dotfiles
+./dotfiles setup --install-packages
+```
 
-Edits through either path update the tracked file. Review with `git diff`, then
-commit and push as usual. If an application replaces a symlink when saving,
-restore that link before making further edits. Neovim session files are not linked.
+Setup asks for the Notebook directory and which Firefox profile to manage. Press
+Enter at the Firefox prompt to skip Firefox. GNOME is deselected automatically
+when setup is run outside a detected GNOME session.
 
-Original live files are backed up under
-`~/.local/state/dotfiles-backups/`.
-The repository versions before importing live configs are preserved in commit
-`cc2a0f7`. These links are local to this machine; cloning the repo does not create them.
+`--install-packages` uses sudo for Ubuntu apt dependencies, then bootstraps pinned
+shell/tmux/Neovim plugins, a checksum-verified Neovim 0.11.7 build, JetBrains Nerd
+Font, Pyright, available VS Code extensions, compatible GNOME extensions, and
+Firefox add-on packages. It sets up the task reminder service after applying files.
+Third-party GUI applications (Code, Doom Emacs, Zed, Lazygit, Qutebrowser, etc.)
+need their own installation; their captured configs are deployed by `editors`.
+`doctor` reports missing applications. Proprietary EDA tools/licenses are local.
 
-Machine-local license keys are loaded from `~/.config/zsh/dotfiles-secrets.zsh`
-and are not stored in this repository.
+New GNOME extensions may require logging out/in, followed by `./dotfiles apply`.
+Firefox add-ons are downloaded to `~/.local/share/dotfiles/firefox-addons/`;
+open `about:addons` and use the gear menu → Install Add-on From File to approve
+them. Ordinary Firefox does not provide a reliable per-user silent-install flow. Vimium/Sidebery settings,
+Tampermonkey scripts, and other extension-specific data still need reviewed exports;
+see [the capture inventory](docs/configuration-inventory.md).
 
-## Per-machine zsh settings
+For existing dependencies, omit `--install-packages` and run `./dotfiles deps`
+separately when needed. Dependency installations, downloaded tools, apt packages,
+and service enablement are outside configuration rollback. The setup tool never
+changes your login shell; launch `zsh`, or use `chsh -s /usr/bin/zsh` yourself.
 
-`backup_zshrc` holds only the shared shell config (prompts, plugins, aliases).
-Machine-specific PATHs and environment variables live in `machines/<hostname>.zsh`
-(tracked, never secrets). At startup the shell sources the file matching
-`hostname`, falling back to `machines/default.zsh` when no match exists, so a
-fresh clone keeps working before any machine file is added. Secrets (tokens,
-license keys) go in the untracked `~/.config/zsh/dotfiles-secrets.zsh`, which
-is sourced last. To onboard a machine, add `machines/<hostname>.zsh` with its
-PATHs and create a local `~/.config/zsh/dotfiles-secrets.zsh` if needed.
+## Machine-local paths
 
-The Neovim Notebook path is fixed at `~/Desktop/Notebook` on every machine.
+Answers live in `~/.config/dotfiles/machine.json`, outside Git. Use
+`./dotfiles configure` to change them. For unattended setup, copy and edit
+[config/machine.example.json](config/machine.example.json), then run:
+
+```sh
+./dotfiles setup --config /path/to/machine.json --non-interactive --install-packages
+```
+
+Keep that external JSON file at its chosen location; subsequent commands need
+`--config /path/to/machine.json`. The generated shell and Neovim path files live
+under `$XDG_CONFIG_HOME/dotfiles/`; Neovim reads them even from GUI launchers.
+`path_dirs` prepends existing tool directories; `env` supplies tool variables.
+`tasks_dir` selects local task storage. Shared config never copies Notebook or
+task contents. Credentials remain in `~/.config/zsh/dotfiles-secrets.zsh`.
+Shell-only customizations may go in `$XDG_CONFIG_HOME/dotfiles/local.zsh`.
+
+Components: `shell`, `terminal`, `nvim`, `editors`, `desktop`, `tasks`, `gnome`,
+`firefox`. All are selected by default. Select a subset for a headless machine:
+
+```sh
+./dotfiles setup --non-interactive --notebook /path/to/Notebook \
+  --components shell,terminal,nvim
+```
+
+Hardware preferences and the LG input shortcut are opt-in through
+`hardware_settings` and `lg_monitor`. The double-Ctrl listener/autostart is X11
+only and skipped on Wayland. The ordinary Rofi shortcut remains available, but
+Rofi's window-switching mode depends on desktop/display-server support.
+Legacy `machines/laptop.zsh` is retained as reference and is not automatically
+sourced. The old workstation fallback was preserved locally on the source machine;
+new machines receive portable defaults only.
+
+## Apply, update, and refresh
+
+```sh
+./dotfiles apply --dry-run   # inspect planned replacements/settings
+./dotfiles apply             # back up conflicts, link files, apply settings
+./dotfiles update            # fast-forward from upstream, then apply
+./dotfiles refresh           # reload tmux/restart an already-active task service
+./dotfiles doctor            # report missing dependencies and file drift
+./dotfiles deps              # install missing locked plugins/tools/add-ons
+./dotfiles tasks-setup       # create task venv and enable reminder service
+./dotfiles firefox-addons    # download verified packages for browser-side installation
+```
+
+`config_update` runs the update command from Zsh. Updates refuse a dirty checkout
+or a diverged branch. Changed plugin/add-on manifests trigger dependency setup
+before apply; changed system-package lists are reported for explicit apt setup. Commit/push intentional shared-config edits before updating
+other machines. Existing plugins at a different revision or with local edits are
+left alone with an actionable error; dependency versions are changed deliberately.
+
+Files are linked individually from [config/files.json](config/files.json).
+Existing files/symlinks are backed up before replacement. Directory conflicts or
+writes through symlinked parent directories stop preflight; migrate such directory
+links to individual files first. Unrelated files are retained. Git identity and
+other Git settings are preserved via a managed include. Zed settings are generated
+from shared preferences while preserving existing machine-local SSH connections. Firefox user.js and CSS
+are merged using delimited managed blocks; the rest of each file is preserved.
+Firefox must be closed before applying browser files.
+
+GNOME settings are applied only from a GNOME 46 session. Available enabled
+extensions are restored; unavailable extensions are reported. Monitor preferences,
+experimental scaling, and the LG shortcut are excluded unless opted in. App IDs
+for Auto Move Windows/favorites are captured from the source installation and may
+need adjustment when switching between Snap and native applications.
+
+Apply reloads a running tmux server and restarts an already-active task service.
+Open a new terminal after applying shell changes; reopen editors/Firefox. Log
+out/in for extensions and autostart changes. Active applications are not killed.
+
+## Recovery and verification
+
+Each changed apply prints a backup ID. Backups are private and live under
+`$XDG_STATE_HOME/dotfiles/backups/` (default `~/.local/state/dotfiles/backups/`).
+They record replaced files, original symlinks, and previous values for changed
+GNOME keys. An apply failure attempts to restore that run automatically.
+
+```sh
+./dotfiles rollback BACKUP-ID
+```
+
+Rollback refuses to overwrite subsequent edits; inspect them before using
+`--force`. It restores configuration, not the Git revision or installed packages.
+For multiple runs, roll back newest first. Empty directories may remain.
+A dry run writes no files, settings, backups, or local configuration. An unchanged
+apply makes no new backup. Keep the checkout at its installed path; reapply after
+moving it to update links and generated paths.
+
+```sh
+/usr/bin/python3 -m unittest discover -s tests -v
+```
+
+Tests use temporary homes and a private D-Bus/dconf session, never live GNOME
+settings. [The capture inventory](docs/configuration-inventory.md) lists source
+files, destinations, dependencies, and remaining browser export gaps.
 
 ## Local tasks and reminders
 

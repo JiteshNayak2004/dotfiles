@@ -1,9 +1,9 @@
 # Captured configuration inventory
 
 This is the missing-config capture stage, using Ubuntu 24.04 and GNOME Shell 46
-as the reference. These additions are snapshots, not an installer. Existing live
-symlinks are preserved; new files have not been linked or applied. No packages,
-extensions, services, or browser preferences were changed during capture.
+as the reference. The capture snapshots now feed the repository-local `dotfiles` installer. See
+[the setup guide](../README.md) for supported platforms, apply/update commands,
+and rollback. Capture itself did not modify desktop or browser preferences.
 
 ## File destinations
 
@@ -16,11 +16,11 @@ Back up existing destinations before eventually installing these files.
 | `scripts/rofi-double-ctrl` | `~/.local/bin/rofi-double-ctrl` | X11 only; Python 3, libX11, libXi, Rofi |
 | `scripts/rofi-powermenu` | `~/.local/bin/rofi-powermenu` | Current live launcher; separate from `rofi/powermenu.sh` |
 | `scripts/hardware/lg-input` | `~/.local/bin/lg-input` | Optional LG DDC helper; needs ddcutil, i2c-tools and device permissions |
-| `autostart/rofi-double-ctrl.desktop` | `~/.config/autostart/rofi-double-ctrl.desktop` | Snapshot contains reference-machine Exec path; render it at installation |
+| `autostart/rofi-double-ctrl.desktop` | `~/.config/autostart/rofi-double-ctrl.desktop` | Snapshot contains reference-machine Exec path; installer renders the target user path |
 | `doom/{init,config,packages}.el` | `~/.config/doom/` | Requires Doom Emacs and its package setup |
 | `code/settings.json` | `~/.config/Code/User/settings.json` | Existing bindings remain in `code_keybinds.json` |
 | `code/extensions.txt` | No direct file destination | Unique installed extension IDs; versions are not pinned |
-| `zed/settings.json` | `~/.config/zed/settings.json` | SSH connections/project paths omitted |
+| `zed/settings.json` | `~/.config/zed/settings.json` | Shared preferences; installer preserves local SSH connections/project paths |
 | `lazygit/config.yml` | `~/.config/lazygit/config.yml` | Editor preference |
 | `git/config` | Include from `~/.gitconfig` | Diff preferences only; excludes user identity and credentials |
 | `git/ignore` | `~/.config/git/ignore` | Global ignore rules |
@@ -34,14 +34,14 @@ Back up existing destinations before eventually installing these files.
 The font referenced by Kitty is `JetBrainsMono NF Bold`; the current machine has
 JetBrains Nerd Font files under `~/.local/share/fonts/JetbrainNerdFont`. Font
 binaries are not vendored. Shared shell/plugin dependency revisions are recorded
-in `shell/dependencies.json`; this is an inventory, not a dependency installer.
+in `shell/dependencies.json`; the installer uses these revisions when bootstrapping dependencies.
 
 ## GNOME settings
 
 These are selected, readable dconf snapshots. They capture explicit overrides,
 except `shell.dconf`, which also records effective Shell keybinding values.
 Defaults may differ on other GNOME versions. Missing schemas and incompatible
-extensions must be handled by the future installer before settings are applied.
+extensions are checked or reported by the installer before settings are applied.
 Do not restore the entire tree blindly on a different machine.
 
 | Snapshot | dconf destination subtree |
@@ -76,7 +76,7 @@ Machine-specific or installation-dependent settings requiring special handling:
 
 The active-looking Snap profile was verified to contain the six captured user
 add-ons and the selected CSS. A separate regular Firefox profile tree also exists;
-the future installer must detect profiles and ask which one to manage. The CSS
+setup detects profiles and asks which one to manage. The CSS
 outside the Snap profile directory is not active profile CSS and was excluded.
 
 Captured: user add-on IDs/observed versions, tab-hiding CSS, and an allowlist of
@@ -99,19 +99,14 @@ identifiers, extension storage databases, or unreviewed backup bundles in Git.
 Private extension exports can be kept in ignored `firefox/private-exports/` until
 reviewed. This directory is not a synchronization or backup mechanism.
 
-## Remaining portability work
+## Remaining manual/installation-specific work
 
-- Build setup/update/backup/rollback tooling and a source-to-destination manifest.
-- Prompt for Notebook and optional toolchain/license paths; store answers locally.
-- Resolve hard-coded paths in current Zsh, tmux, Neovim, autostart, and GNOME commands.
-- Install and verify shell, tmux, Neovim, editor, font, and extension dependencies.
-- Account for GNOME versions, application IDs, and X11 versus Wayland.
-- Resolve `focus@scaryrawr.github.io`: present in the enabled list but absent from
-  the inspected user and system extension directories.
-- Notebook contents, task files, proprietary tools, licenses, and browser personal
-  data remain outside Git and need separate migration/synchronization.
-- Vendor-generated proprietary application launchers and unrelated URL handlers
-  were not copied; their installation paths must come from their installers.
-
-The shell currently references missing `~/update.sh` and `~/scripts/llm.py` files;
-there were no source files at those paths to capture.
+- Run the installer on the target machine, supplying its Notebook/profile paths.
+- Install optional GUI applications and proprietary EDA tools using their installers.
+- Review/export extension-specific Firefox settings listed above.
+- Adjust Auto Move Windows and favorite app IDs if application packaging changes.
+- `focus@scaryrawr.github.io` was absent during capture; dependency setup attempts
+  a compatible download and reports availability rather than assuming it exists.
+- Notebook contents, task files, licenses, and personal browser data remain outside Git.
+- `~/scripts/llm.py` was absent on the source machine; its existing alias still
+  requires that separately supplied script. `config_update` now uses the installer.

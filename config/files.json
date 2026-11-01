@@ -1,0 +1,161 @@
+[
+  {
+    "component": "shell",
+    "source": "backup_zshrc",
+    "root": "home",
+    "target": ".zshrc"
+  },
+  {
+    "component": "shell",
+    "source": ".p10k.zsh",
+    "root": "home",
+    "target": ".p10k.zsh"
+  },
+  {
+    "component": "shell",
+    "source": "git/ignore",
+    "root": "config",
+    "target": "git/ignore"
+  },
+  {
+    "component": "terminal",
+    "source": ".tmux.conf",
+    "root": "home",
+    "target": ".tmux.conf"
+  },
+  {
+    "component": "terminal",
+    "source": "scripts/tmux-default-4windows.sh",
+    "root": "home",
+    "target": ".local/bin/dotfiles-tmux-default-4windows"
+  },
+  {
+    "component": "terminal",
+    "source": "scripts/tmux-session-picker.sh",
+    "root": "home",
+    "target": ".local/bin/dotfiles-tmux-session-picker"
+  },
+  {
+    "component": "terminal",
+    "source": "kitty/kitty.conf",
+    "root": "config",
+    "target": "kitty/kitty.conf"
+  },
+  {
+    "component": "nvim",
+    "source": "nvim/init.lua",
+    "root": "config",
+    "target": "nvim/init.lua"
+  },
+  {
+    "component": "nvim",
+    "source": "nvim/lua/lsp.lua",
+    "root": "config",
+    "target": "nvim/lua/lsp.lua"
+  },
+  {
+    "component": "editors",
+    "source": "code/settings.json",
+    "root": "config",
+    "target": "Code/User/settings.json"
+  },
+  {
+    "component": "editors",
+    "source": "code_keybinds.json",
+    "root": "config",
+    "target": "Code/User/keybindings.json"
+  },
+  {
+    "component": "editors",
+    "source": "lazygit/config.yml",
+    "root": "config",
+    "target": "lazygit/config.yml"
+  },
+  {
+    "component": "editors",
+    "source": "qutebrowser/config.py",
+    "root": "config",
+    "target": "qutebrowser/config.py"
+  },
+  {
+    "component": "editors",
+    "source": "doom/init.el",
+    "root": "config",
+    "target": "doom/init.el"
+  },
+  {
+    "component": "editors",
+    "source": "doom/config.el",
+    "root": "config",
+    "target": "doom/config.el"
+  },
+  {
+    "component": "editors",
+    "source": "doom/packages.el",
+    "root": "config",
+    "target": "doom/packages.el"
+  },
+  {
+    "component": "desktop",
+    "source": "rofi/config.rasi",
+    "root": "config",
+    "target": "rofi/config.rasi"
+  },
+  {
+    "component": "desktop",
+    "source": "rofi/powermenu.sh",
+    "root": "config",
+    "target": "rofi/powermenu.sh"
+  },
+  {
+    "component": "desktop",
+    "source": "gtk-3.0/settings.ini",
+    "root": "config",
+    "target": "gtk-3.0/settings.ini"
+  },
+  {
+    "component": "desktop",
+    "source": "gnome/pop-shell/config.json",
+    "root": "config",
+    "target": "pop-shell/config.json"
+  },
+  {
+    "component": "desktop",
+    "source": "scripts/rofi-double-ctrl",
+    "root": "home",
+    "target": ".local/bin/rofi-double-ctrl",
+    "x11": true
+  },
+  {
+    "component": "desktop",
+    "source": "scripts/rofi-powermenu",
+    "root": "home",
+    "target": ".local/bin/rofi-powermenu",
+    "x11": false
+  },
+  {
+    "component": "desktop",
+    "source": "scripts/hardware/lg-input",
+    "root": "home",
+    "target": ".local/bin/lg-input",
+    "hardware": true
+  },
+  {
+    "component": "tasks",
+    "source": "tasks/task",
+    "root": "home",
+    "target": ".local/bin/task"
+  },
+  {
+    "component": "tasks",
+    "source": "nvim/plugin/tasks.lua",
+    "root": "config",
+    "target": "nvim/plugin/dotfiles-tasks.lua"
+  },
+  {
+    "component": "tasks",
+    "source": "tasks/dotfiles-tasks.service",
+    "root": "config",
+    "target": "systemd/user/dotfiles-tasks.service"
+  }
+]

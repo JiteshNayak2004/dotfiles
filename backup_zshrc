@@ -1,3 +1,13 @@
+# Resolve the checkout through the live symlink; never depend on a fixed location.
+_zsh_self="${(%):-%x}"
+[[ -L "$_zsh_self" ]] && _zsh_self="$(readlink -f "$_zsh_self")"
+export DOTFILES_REPO="${_zsh_self:h}"
+source "$DOTFILES_REPO/machines/default.zsh"
+_dotfiles_config="${XDG_CONFIG_HOME:-$HOME/.config}/dotfiles"
+[[ ! -f "$_dotfiles_config/env.zsh" ]] || source "$_dotfiles_config/env.zsh"
+[[ ! -f "$_dotfiles_config/local.zsh" ]] || source "$_dotfiles_config/local.zsh"
+unset _zsh_self _dotfiles_config
+
 # Enable Powerlevel10k instant prompt
 if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
   source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
@@ -30,7 +40,7 @@ POWERLEVEL9K_SHOW_CHANGESET=true
 POWERLEVEL9K_SHORTEN_DIR_LENGTH=2
 POWERLEVEL9K_COLOR_SCHEME="dark"
 
-source ~/applications/powerlevel10k/powerlevel10k.zsh-theme
+[[ ! -f "$HOME/applications/powerlevel10k/powerlevel10k.zsh-theme" ]] || source "$HOME/applications/powerlevel10k/powerlevel10k.zsh-theme"
 
 # Plugins
 plugins=(
@@ -41,7 +51,7 @@ plugins=(
   zsh-autosuggestions
   zsh-syntax-highlighting
 )
-source $ZSH/oh-my-zsh.sh
+[[ ! -f "$ZSH/oh-my-zsh.sh" ]] || source "$ZSH/oh-my-zsh.sh"
 # Let fzf-tab display completion candidates instead of Oh My Zsh's menu.
 zstyle ':completion:*:*:*:*:*' menu no
 zstyle ':completion:*:descriptions' format '[%d]'
@@ -53,7 +63,7 @@ export KEYTIMEOUT=1
 # Zoxide initialization
 # eval "$(zoxide init zsh)"
 # Initialize fasd
-eval "$(fasd --init auto)"
+command -v fasd >/dev/null && eval "$(fasd --init auto)"
 
 # Key bindings
 zle -N accept-current-completion
@@ -68,8 +78,8 @@ alias ta='tmux -u attach -t'
 alias tk='tmux -u kill-session -t'
 alias t='tmux -u'
 alias spotify='spotify --audio-api=pulseaudio'
-alias cat='bat'
-alias fd='fdfind'
+command -v batcat >/dev/null && alias cat='batcat'
+command -v fdfind >/dev/null && alias fd='fdfind'
 # virtual Environment
 export pyvirtualenv=~/pyvirtualenv
 # Python used to create virtual environments (overridable per machine)
@@ -116,9 +126,13 @@ alias c="clear"
 alias scratchpad="nvim ~/scratchpad"
 alias rm="rm -ir"
 alias llm="python3 ~/scripts/llm.py"
-alias copy="xclip -sel clip"
+if [[ ${XDG_SESSION_TYPE:-} == wayland ]]; then
+  alias copy='wl-copy'
+else
+  alias copy='xclip -sel clip'
+fi
 alias displaymanager="sudo vim /etc/gdm3/custom.conf"
-alias config_update="~/update.sh"
+config_update() { "$DOTFILES_REPO/dotfiles" update "$@"; }
 alias lg="lazygit"
 
 alias hs='print -z -- "$(fc -rl 1 | fzf | awk '\''{$1=""; sub(/^ /,""); print}'\'')"'
@@ -163,7 +177,7 @@ export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
 
 # opencode
-export PATH=/home/jitesh/.opencode/bin:$PATH
+export PATH="$HOME/.opencode/bin:$PATH"
 
 # fzf terminal integration (prefers ~/.fzf/bin 0.67 over system 0.29)
 export PATH="$HOME/.fzf/bin:$PATH"
@@ -173,24 +187,13 @@ export FZF_ALT_C_COMMAND='fd --type d --hidden --follow --exclude .git 2>/dev/nu
 export FZF_DEFAULT_OPTS='--height 40% --reverse --border --multi --info=inline'
 # free Ctrl-S / Ctrl-Q from XON/XOFF flow control so they reach fzf/nvim
 [[ -t 0 ]] && stty -ixon 2>/dev/null
-[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
+if [[ -f ~/.fzf.zsh ]]; then
+  source ~/.fzf.zsh
+elif [[ -f /usr/share/doc/fzf/examples/key-bindings.zsh ]]; then
+  source /usr/share/doc/fzf/examples/key-bindings.zsh
+fi
 # Use the fzf file picker with Ctrl-F in vi insert mode (Ctrl-T remains available).
 bindkey -M viins "^F" fzf-file-widget
 
-# ---------------------------------------------------------------------------
-# Machine-specific settings: PATHs and env live in machines/<hostname>.zsh
-# (tracked per machine, no secrets). Falls back to machines/default.zsh.
-# Machine-local credentials live in ~/.config/zsh/dotfiles-secrets.zsh,
-# which is never tracked in this repository.
-# ---------------------------------------------------------------------------
-_zsh_self="${(%):-%x}"
-[[ -L "$_zsh_self" ]] && _zsh_self="$(readlink -f "$_zsh_self")"
-_machines_dir="${_zsh_self:h}/machines"
-if [[ -f "$_machines_dir/${(%):-%m}.zsh" ]]; then
-  source "$_machines_dir/${(%):-%m}.zsh"
-elif [[ -f "$_machines_dir/default.zsh" ]]; then
-  source "$_machines_dir/default.zsh"
-fi
-unset _zsh_self _machines_dir
-
+# Credentials remain machine-local and are loaded last.
 [ -f "$HOME/.config/zsh/dotfiles-secrets.zsh" ] && source "$HOME/.config/zsh/dotfiles-secrets.zsh"

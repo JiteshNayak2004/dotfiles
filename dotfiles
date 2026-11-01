@@ -1,0 +1,725 @@
+#!/usr/bin/python3
+"""Install the shared configuration without a third-party dotfile manager."""
+import argparse
+import ast
+import configparser
+from contextlib import contextmanager
+from datetime import datetime, timezone
+import fcntl
+import hashlib
+import io
+import platform
+import tarfile
+import json
+import os
+from pathlib import Path
+import re
+import shlex
+import shutil
+import subprocess
+import sys
+import tempfile
+import urllib.parse
+import urllib.request
+import uuid
+
+REPO = Path(__file__).resolve().parent
+HOME = Path.home()
+CONFIG = Path(os.environ.get('XDG_CONFIG_HOME', HOME / '.config'))
+DATA = Path(os.environ.get('XDG_DATA_HOME', HOME / '.local/share'))
+STATE = Path(os.environ.get('XDG_STATE_HOME', HOME / '.local/state')) / 'dotfiles'
+DEFAULT_COMPONENTS = ['shell', 'terminal', 'nvim', 'editors', 'desktop', 'tasks', 'gnome', 'firefox']
+START = '// BEGIN DOTFILES MANAGED\n'
+END = '// END DOTFILES MANAGED\n'
+
+
+def run(*args, **kwargs):
+    return subprocess.run([str(a) for a in args], check=True, text=True, **kwargs)
+
+
+def output(*args):
+    return run(*args, stdout=subprocess.PIPE, stderr=subprocess.PIPE).stdout.strip()
+
+
+def absolute(value):
+    return Path(os.path.expandvars(str(value))).expanduser().absolute()
+
+
+def atomic(path, data, mode=0o600):
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fd, name = tempfile.mkstemp(prefix='.dotfiles-', dir=path.parent)
+    try:
+        with os.fdopen(fd, 'wb' if isinstance(data, bytes) else 'w') as stream:
+            stream.write(data)
+            stream.flush()
+            os.fsync(stream.fileno())
+        os.chmod(name, mode)
+        os.replace(name, path)
+    finally:
+        if os.path.lexists(name):
+            os.unlink(name)
+
+
+def fingerprint(path):
+    if path.is_symlink():
+        return ['link', os.readlink(path)]
+    if not path.exists():
+        return ['absent']
+    if not path.is_file():
+        raise ValueError(f'Expected a file or symlink, found directory: {path}')
+    return ['file', hashlib.sha256(path.read_bytes()).hexdigest(), path.stat().st_mode & 0o777]
+
+
+@contextmanager
+def locked():
+    STATE.mkdir(parents=True, exist_ok=True, mode=0o700)
+    with (STATE / 'lock').open('w') as stream:
+        fcntl.flock(stream, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        yield
+
+
+class Transaction:
+    def __init__(self):
+        self.folder = STATE / 'backups' / (datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ-') + uuid.uuid4().hex[:8])
+        self.folder.mkdir(parents=True, mode=0o700)
+        self.journal = {'status': 'in-progress', 'repo': str(REPO), 'changes': []}
+        self.save()
+
+    def save(self):
+        atomic(self.folder / 'journal.json', json.dumps(self.journal, indent=2) + '\n')
+
+    def file(self, path, source=None, content=None, mode=0o600):
+        parent_safe(path)
+        before = fingerprint(path)
+        entry = {'kind': 'file', 'path': str(path), 'before': before}
+        if before[0] == 'file':
+            saved = self.folder / str(len(self.journal['changes']))
+            shutil.copy2(path, saved)
+            entry['backup'] = saved.name
+        self.journal['changes'].append(entry)
+        self.save()
+        if source is not None:
+            path.parent.mkdir(parents=True, exist_ok=True)
+            temporary = path.parent / ('.dotfiles-' + uuid.uuid4().hex)
+            try:
+                temporary.symlink_to(source)
+                os.replace(temporary, path)
+            finally:
+                temporary.unlink(missing_ok=True)
+        else:
+            atomic(path, content, mode)
+        entry['after'] = fingerprint(path)
+        self.save()
+
+    def setting(self, key, value):
+        old = output('dconf', 'read', key)
+        self.journal['changes'].append({'kind': 'dconf', 'path': key, 'before': old, 'after': value})
+        self.save()
+        run('dconf', 'write', key, value)
+        self.journal['changes'][-1]['after'] = output('dconf', 'read', key)
+        self.save()
+
+    def finish(self):
+        self.journal['status'] = 'complete'
+        self.save()
+        print(f'Backup: {self.folder.name}')
+
+
+def restore(folder, force=False):
+    journal_path = folder / 'journal.json'
+    journal = json.loads(journal_path.read_text())
+    if journal['status'] == 'restored':
+        raise ValueError('This backup has already been restored')
+    # Check every destination before restoring anything; protect edits made after apply.
+    for entry in journal['changes']:
+        if entry['kind'] == 'file':
+            parent_safe(Path(entry['path']))
+        actual = fingerprint(Path(entry['path'])) if entry['kind'] == 'file' else output('dconf', 'read', entry['path'])
+        if actual not in [entry['before'], entry.get('after')] and not force:
+            raise ValueError(f"Changed since apply: {entry['path']}; inspect it before using --force")
+    for entry in reversed(journal['changes']):
+        path = entry['path']
+        if entry['kind'] == 'dconf':
+            run('dconf', 'write', path, entry['before']) if entry['before'] else run('dconf', 'reset', path)
+            continue
+        path = Path(path)
+        before = entry['before']
+        if before[0] == 'absent':
+            path.unlink(missing_ok=True)
+        elif before[0] == 'link':
+            path.unlink(missing_ok=True)
+            path.symlink_to(before[1])
+        else:
+            atomic(path, (folder / entry['backup']).read_bytes(), before[2])
+    journal['status'] = 'restored'
+    atomic(journal_path, json.dumps(journal, indent=2) + '\n')
+    print(f'Restored {folder.name}. Reopen affected apps; log out/in for desktop changes.')
+
+
+def profiles():
+    found = set()
+    for root in [HOME / '.mozilla/firefox', HOME / 'snap/firefox/common/.mozilla/firefox', HOME / '.var/app/org.mozilla.firefox/.mozilla/firefox']:
+        ini = configparser.RawConfigParser()
+        ini.read(root / 'profiles.ini')
+        for section in ini.sections():
+            if section.startswith('Profile') and ini.has_option(section, 'Path'):
+                path = Path(ini.get(section, 'Path'))
+                if ini.get(section, 'IsRelative', fallback='1') == '1':
+                    path = root / path
+                if path.is_dir():
+                    found.add(path.resolve())
+    return sorted(found)
+
+
+def validate(config):
+    unknown = set(config.get('components', [])) - set(DEFAULT_COMPONENTS)
+    if unknown:
+        raise ValueError(f'Unknown components: {sorted(unknown)}')
+    notebook = config.get('notebook_dir')
+    if not notebook or not absolute(notebook).is_dir():
+        raise ValueError('notebook_dir must be an existing directory; sync/create your Notebook first')
+    config['notebook_dir'] = str(absolute(notebook))
+    config.setdefault('components', DEFAULT_COMPONENTS.copy())
+    config.setdefault('path_dirs', [])
+    config.setdefault('env', {})
+    for key, value in config['env'].items():
+        if not re.fullmatch(r'[A-Za-z_][A-Za-z0-9_]*', key) or not isinstance(value, str):
+            raise ValueError('env must contain shell variable names and string values')
+        if key in {'HOME', 'XDG_CONFIG_HOME', 'XDG_DATA_HOME', 'XDG_STATE_HOME', 'DOTFILES_REPO', 'NOTEBOOK_DIR', 'TASKS_DIR', 'PATH'}:
+            raise ValueError(f'Use path_dirs or the process environment instead of overriding {key}')
+    for value in config['path_dirs']:
+        if not isinstance(value, str) or not absolute(value).is_dir():
+            raise ValueError(f'path_dirs entry must be an existing directory: {value}')
+    for key in ['tasks_dir', 'firefox_profile']:
+        if config.get(key):
+            config[key] = str(absolute(config[key]))
+    if config.get('firefox_profile') and not Path(config['firefox_profile']).is_dir():
+        raise ValueError('firefox_profile must be an existing profile directory')
+    return config
+
+
+def load_config(args, configure=False):
+    path = absolute(args.config) if args.config else CONFIG / 'dotfiles/machine.json'
+    config = json.loads(path.read_text()) if path.exists() else {}
+    if not isinstance(config, dict):
+        raise ValueError('Machine configuration must be a JSON object')
+    if getattr(args, 'notebook', None):
+        config['notebook_dir'] = args.notebook
+    if getattr(args, 'components', None):
+        config['components'] = args.components.split(',')
+    config.setdefault('components', DEFAULT_COMPONENTS.copy())
+    if configure and not args.non_interactive:
+        default = config.get('notebook_dir', str(HOME / 'Desktop/Notebook'))
+        config['notebook_dir'] = input(f'Notebook directory [{default}]: ').strip() or default
+        if 'firefox' in config['components'] and not config.get('firefox_profile'):
+            choices = profiles()
+            for index, candidate in enumerate(choices, 1):
+                print(f'  {index}. {candidate}')
+            answer = input('Firefox profile number, absolute path, or blank to skip: ').strip()
+            if answer:
+                if answer.isdigit() and not 1 <= int(answer) <= len(choices):
+                    raise ValueError('Firefox profile number is outside the displayed list')
+                config['firefox_profile'] = str(choices[int(answer) - 1]) if answer.isdigit() else answer
+            else:
+                config['components'].remove('firefox')
+        if 'gnome' in config['components'] and 'GNOME' not in os.environ.get('XDG_CURRENT_DESKTOP', '').upper():
+            print('GNOME session not detected; deselecting gnome. Enable it later in machine.json.')
+            config['components'].remove('gnome')
+    config = validate(config)
+    if 'firefox' in config['components'] and not config.get('firefox_profile'):
+        raise ValueError('Select firefox_profile in machine.json, or exclude firefox from components')
+    return path, config
+
+
+def managed(text, body, start=START, end=END):
+    if text.count(start) != text.count(end) or text.count(start) > 1:
+        raise ValueError('Malformed managed block; inspect the destination before applying')
+    block = start + body.rstrip() + '\n' + end
+    if start in text:
+        left, tail = text.split(start, 1)
+        _, right = tail.split(end, 1)
+        return left + block + right
+    return text.rstrip() + ('\n\n' if text.strip() else '') + block
+
+
+def parent_safe(path):
+    for parent in path.parents:
+        if parent == parent.parent:
+            break
+        if parent.is_symlink():
+            raise ValueError(f'Parent directory is a symlink: {parent}; migrate it to individual file links first')
+
+
+def firefox_closed(profile):
+    # Firefox uses a POSIX lock on .parentlock; the empty file survives shutdown.
+    for name in ['.parentlock', 'parent.lock']:
+        path = profile / name
+        if path.is_file() and not path.is_symlink():
+            with path.open('r+b') as stream:
+                try:
+                    fcntl.lockf(stream, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                    fcntl.lockf(stream, fcntl.LOCK_UN)
+                except BlockingIOError as error:
+                    raise ValueError(f'Close Firefox before applying profile: {profile}') from error
+    lock = profile / 'lock'
+    if lock.is_symlink():
+        match = re.search(r':\+?(\d+)$', os.readlink(lock))
+        if not match:
+            raise ValueError(f'Unrecognized Firefox profile lock: {lock}')
+        try:
+            os.kill(int(match[1]), 0)
+        except ProcessLookupError:
+            return  # Stale lock from a crashed Firefox process.
+        raise ValueError(f'Close Firefox before applying profile: {profile}')
+
+
+def jsonc(text):
+    # Strip comments/trailing commas while leaving quoted strings intact.
+    text = re.sub(r'"(?:\\.|[^"\\])*"|//[^\n]*|/\*[\s\S]*?\*/', lambda match: '' if match[0].startswith(('//', '/*')) else match[0], text)
+    text = re.sub(r'"(?:\\.|[^"\\])*"|,\s*(?=[}\]])', lambda match: '' if match[0].startswith(',') else match[0], text)
+    return json.loads(text)
+
+
+def file_plan(config, check_browser=True):
+    plan = []
+    roots = {'home': HOME, 'config': CONFIG, 'data': DATA}
+    manifest = json.loads((REPO / 'config/files.json').read_text())
+    for item in manifest:
+        if item['component'] not in config['components']:
+            continue
+        if item.get('hardware') and not config.get('lg_monitor', False):
+            continue
+        if item.get('x11') and os.environ.get('XDG_SESSION_TYPE') == 'wayland':
+            print(f"SKIP X11-only: {item['target']}")
+            continue
+        source = REPO / item['source']
+        if not source.is_file():
+            raise ValueError(f'Missing source: {source}')
+        target = roots[item['root']] / item['target']
+        if target.is_symlink() and target.resolve() == source.resolve():
+            continue
+        parent_safe(target)
+        fingerprint(target)
+        plan.append((target, source, None, 0o600))
+    env = {'DOTFILES_REPO': str(REPO), 'NOTEBOOK_DIR': config['notebook_dir'], 'TASKS_DIR': config.get('tasks_dir', str(DATA / 'tasks')), **config.get('env', {})}
+    content = '# Generated from local machine.json; do not commit.\n'
+    content += ''.join(f'export {key}={shlex.quote(value)}\n' for key, value in env.items())
+    for path in reversed(config.get('path_dirs', [])):
+        content += f'export PATH={shlex.quote(str(absolute(path)))}:"$PATH"\n'
+    generated = [(CONFIG / 'dotfiles/env.zsh', content, 0o600), (CONFIG / 'dotfiles/paths.json', json.dumps({'notebook_dir': config['notebook_dir']}) + '\n', 0o600)]
+    if 'desktop' in config['components'] and os.environ.get('XDG_SESSION_TYPE') != 'wayland':
+        text = (REPO / 'autostart/rofi-double-ctrl.desktop').read_text()
+        command = str(HOME / '.local/bin/rofi-double-ctrl').replace('\\', '\\\\').replace('"', '\\"').replace('`', '\\`').replace('$', '\\$').replace('%', '%%')
+        text = re.sub(r'^Exec=.*$', lambda _: f'Exec="{command}"', text, flags=re.M)
+        generated.append((CONFIG / 'autostart/rofi-double-ctrl.desktop', text, 0o644))
+    if 'shell' in config['components']:
+        path = HOME / '.gitconfig'
+        text = path.read_text() if path.exists() else ''
+        include = str(REPO / 'git/config').replace('\\', '\\\\').replace('"', '\\"')
+        generated.append((path, managed(text, f'[include]\n    path = "{include}"', '# BEGIN DOTFILES MANAGED\n', '# END DOTFILES MANAGED\n'), 0o600))
+    if 'editors' in config['components']:
+        path = CONFIG / 'zed/settings.json'
+        shared = json.loads((REPO / 'zed/settings.json').read_text())
+        existing = jsonc(path.read_text()) if path.exists() else {}
+        if 'ssh_connections' in existing:
+            shared['ssh_connections'] = existing['ssh_connections']
+        generated.append((path, json.dumps(shared, indent=2) + '\n', 0o600))
+    if 'tasks' in config['components']:
+        # systemd does not inherit shell rc files. EnvironmentFile needs its own quoting.
+        values = {key: str(value).replace('\\', '\\\\').replace('"', '\\"').replace('`', '\\`').replace('$', '\\$') for key, value in env.items() if key == 'TASKS_DIR'}
+        values['XDG_DATA_HOME'] = str(DATA).replace('\\', '\\\\').replace('"', '\\"')
+        generated.append((CONFIG / 'dotfiles/tasks.env', ''.join(f'{key}="{value}"\n' for key, value in values.items()), 0o600))
+    if 'firefox' in config['components']:
+        profile = Path(config['firefox_profile'])
+        if check_browser:
+            firefox_closed(profile)
+        for source, relative, start, end in [
+            ('firefox/user.js', 'user.js', START, END),
+            ('firefox/chrome/userChrome.css', 'chrome/userChrome.css', '/* BEGIN DOTFILES MANAGED */\n', '/* END DOTFILES MANAGED */\n'),
+        ]:
+            path = profile / relative
+            text = path.read_text() if path.exists() else ''
+            generated.append((path, managed(text, (REPO / source).read_text(), start, end), 0o600))
+    for target, content, mode in generated:
+        if target.is_file() and not target.is_symlink() and target.read_text() == content and target.stat().st_mode & 0o777 == mode:
+            continue
+        parent_safe(target)
+        fingerprint(target)
+        plan.append((target, None, content, mode))
+    return plan
+
+
+def gnome_plan(config):
+    if 'gnome' not in config['components']:
+        return []
+    if 'GNOME' not in os.environ.get('XDG_CURRENT_DESKTOP', '').upper() or not os.environ.get('DBUS_SESSION_BUS_ADDRESS'):
+        raise ValueError('Apply GNOME settings from a logged-in GNOME desktop session')
+    version = re.search(r'\d+', output('gnome-shell', '--version')).group()
+    if version != '46':
+        raise ValueError(f'GNOME {version} detected; captured settings support GNOME 46. Deselect gnome to install other components.')
+    bases = {'wm': '/org/gnome/desktop/wm/', 'mutter': '/org/gnome/mutter/', 'media-keys': '/org/gnome/settings-daemon/plugins/media-keys/', 'interface': '/org/gnome/desktop/interface/', 'input-sources': '/org/gnome/desktop/input-sources/', 'extensions': '/org/gnome/shell/extensions/', 'shell': '/org/gnome/shell/'}
+    if config.get('hardware_settings', False):
+        bases['peripherals'] = '/org/gnome/desktop/peripherals/'
+    installed = set(output('gnome-extensions', 'list').splitlines())
+    plan = []
+    for name, base in bases.items():
+        ini = configparser.RawConfigParser(interpolation=None)
+        ini.read(REPO / f'gnome/{name}.dconf')
+        for section in ini.sections():
+            if name == 'media-keys' and section == 'custom-keybindings/custom2' and not config.get('lg_monitor', False):
+                continue
+            for key, value in ini.items(section):
+                if name == 'mutter' and key == 'experimental-features' and not config.get('hardware_settings', False):
+                    continue
+                if name == 'media-keys' and key == 'custom-keybindings' and not config.get('lg_monitor', False):
+                    value = repr([p for p in ast.literal_eval(value) if not p.endswith('/custom2/')])
+                if name == 'shell' and key == 'enabled-extensions':
+                    requested = ast.literal_eval(value)
+                    missing = set(requested) - installed
+                    if missing:
+                        print('UNAVAILABLE GNOME extensions (run deps): ' + ', '.join(sorted(missing)))
+                    value = repr([p for p in requested if p in installed])
+                if name == 'media-keys' and key == 'command':
+                    # Resolve captured helper commands without assuming username or checkout path.
+                    command = shlex.split(ast.literal_eval(value))
+                    command[0] = command[0].replace('/home/jitesh/.local/bin/', str(HOME / '.local/bin') + '/')
+                    value = repr(shlex.join(command))
+                path = base + ('' if section == '/' else section + '/') + key
+                old = output('dconf', 'read', path)
+                if old != value:
+                    # dconf canonicalizes whitespace; use GLib only for the GNOME component.
+                    from gi.repository import GLib
+                    parsed = GLib.Variant.parse(None, value, None, None)
+                    if old and GLib.Variant.parse(parsed.get_type(), old, None, None).equal(parsed):
+                        continue
+                    plan.append((path, value))
+    return plan
+
+
+def apply(config, dry_run=False, config_write=None):
+    files = file_plan(config)
+    settings = gnome_plan(config)
+    if config_write:
+        path, text = config_write
+        parent_safe(path)
+        fingerprint(path)
+        if not path.exists() or path.read_text() != text:
+            files.insert(0, (path, None, text, 0o600))
+    for path, source, _, _ in files:
+        print(f'{"LINK" if source else "WRITE"} {path}' + (f' -> {source}' if source else ''))
+    for key, value in settings:
+        print(f'SET {key} = {value}')
+    if dry_run:
+        print(f'Dry run: {len(files)} files, {len(settings)} settings; no changes made.')
+        return
+    if not files and not settings:
+        print('Already consistent; nothing to change.')
+        return
+    with locked():
+        transaction = Transaction()
+        try:
+            for path, source, content, mode in files:
+                transaction.file(path, source, content, mode)
+            for key, value in settings:
+                transaction.setting(key, value)
+            transaction.finish()
+        except BaseException:
+            print('Apply failed; restoring this run.', file=sys.stderr)
+            restore(transaction.folder, force=True)
+            raise
+    print('Applied. Open a new terminal; reopen editors/Firefox. Log out/in for GNOME or autostart changes.')
+
+
+def download(url):
+    request = urllib.request.Request(url, headers={'User-Agent': 'dotfiles-setup/1.0'})
+    with urllib.request.urlopen(request, timeout=45) as response:
+        return response.read()
+
+
+def clone(url, path, revision=None):
+    if path.exists():
+        if not (path / '.git').exists():
+            raise ValueError(f'Refusing to replace non-Git dependency: {path}')
+        if output('git', '-C', path, 'status', '--porcelain'):
+            raise ValueError(f'Dependency has local edits: {path}')
+        if revision and output('git', '-C', path, 'rev-parse', 'HEAD') != revision:
+            raise ValueError(f'Dependency revision differs: {path}; update it deliberately, then rerun')
+        return
+    path.parent.mkdir(parents=True, exist_ok=True)
+    # Clone to a temporary sibling so failed downloads do not poison later setup runs.
+    with tempfile.TemporaryDirectory(prefix='.dotfiles-clone-', dir=path.parent) as temp:
+        checkout = Path(temp) / 'checkout'
+        run('git', 'init', '--quiet', checkout)
+        run('git', '-C', checkout, 'remote', 'add', 'origin', url)
+        run('git', '-C', checkout, 'fetch', '--quiet', '--depth', '1', 'origin', revision or 'HEAD')
+        run('git', '-C', checkout, 'checkout', '--quiet', '--detach', 'FETCH_HEAD')
+        checkout.rename(path)
+
+
+def install_tools(config):
+    assets = json.loads((REPO / 'config/downloads.json').read_text())
+    names = []
+    if 'nvim' in config['components']:
+        name = 'nvim-' + platform.machine()
+        if name not in assets:
+            raise ValueError('Automatic Neovim download supports Linux x86_64/aarch64 only')
+        names.append(name)
+    if 'terminal' in config['components']:
+        names.append('font')
+    for name in names:
+        item = assets[name]
+        root = DATA / ('fonts' if name == 'font' else 'dotfiles-tools')
+        destination = root / item['directory']
+        if not destination.exists():
+            data = download(item['url'])
+            if hashlib.sha256(data).hexdigest() != item['sha256']:
+                raise ValueError(f'Checksum mismatch: {name}')
+            root.mkdir(parents=True, exist_ok=True)
+            with tempfile.TemporaryDirectory(prefix='.dotfiles-download-', dir=root) as temp:
+                extracted = Path(temp) / 'extracted'
+                extracted.mkdir()
+                with tarfile.open(fileobj=io.BytesIO(data)) as archive:
+                    archive.extractall(extracted, filter='data')
+                extracted.rename(destination)
+        if name.startswith('nvim-'):
+            binary = destination / item['binary']
+            with locked():
+                transaction = Transaction()
+                try:
+                    transaction.file(HOME / '.local/bin/nvim', source=binary)
+                    transaction.finish()
+                except BaseException:
+                    restore(transaction.folder, force=True)
+                    raise
+        elif shutil.which('fc-cache'):
+            run('fc-cache', '-f', destination)
+
+
+def dependencies(config, packages=False):
+    if packages:
+        distro = Path('/etc/os-release').read_text()
+        if not re.search(r'^ID=ubuntu$', distro, re.M):
+            raise ValueError('Automatic apt installation supports Ubuntu only; install dependencies manually elsewhere')
+        package_names = (REPO / 'config/ubuntu-packages.txt').read_text().split()
+        run('sudo', 'apt-get', 'update')
+        run('sudo', 'apt-get', 'install', '-y', *package_names)
+    if 'shell' in config['components'] or 'terminal' in config['components']:
+        urls = json.loads((REPO / 'shell/dependencies.json').read_text())
+        for item in urls['dependencies']:
+            is_tmux = item['name'].startswith('tmux-') or item['name'] == 'tpm'
+            if ('terminal' if is_tmux else 'shell') in config['components']:
+                clone(item['url'], absolute(item['reference_path']), item['observed_revision'])
+    if 'nvim' in config['components']:
+        for item in json.loads((REPO / 'nvim/plugins.json').read_text()):
+            clone('https://github.com/' + item['repo'] + '.git', DATA / 'nvim/site/pack/paqs/start' / item['repo'].split('/')[-1], item['revision'])
+        fzf = DATA / 'nvim/site/pack/paqs/start/fzf'
+        if not (fzf / 'bin/fzf').exists():
+            run(fzf / 'install', '--bin')
+        print('Neovim plugins installed. Run :TSUpdate for required language parsers.')
+    if 'editors' in config['components'] and shutil.which('code'):
+        for extension in (REPO / 'code/extensions.txt').read_text().splitlines():
+            run('code', '--install-extension', extension)
+    if 'nvim' in config['components'] or 'terminal' in config['components']:
+        install_tools(config)
+    if 'gnome' in config['components']:
+        install_gnome_extensions()
+    if 'firefox' in config['components']:
+        firefox_addons()
+        print('Firefox extension installation requires approval in the browser; doctor checks which add-ons are active.')
+    os.environ['PATH'] = str(HOME / '.local/bin') + os.pathsep + os.environ.get('PATH', '')
+    if 'nvim' in config['components'] and shutil.which('npm'):
+        run('npm', 'install', '--prefix', DATA / 'dotfiles-tools/node', 'pyright@1.1.407')
+        path = HOME / '.local/bin/pyright-langserver'
+        if not os.path.lexists(path):
+            path.symlink_to(DATA / 'dotfiles-tools/node/node_modules/.bin/pyright-langserver')
+    print('Dependencies processed. Run ./dotfiles doctor for remaining requirements.')
+
+
+def install_gnome_extensions():
+    version = re.search(r'\d+', output('gnome-shell', '--version')).group()
+    installed = set(output('gnome-extensions', 'list').splitlines())
+    for item in json.loads((REPO / 'gnome/extensions.json').read_text())['extensions']:
+        if not item['enabled'] or item['uuid'] in installed:
+            continue
+        name = item['uuid']
+        query = urllib.parse.urlencode({'uuid': name, 'shell_version': version})
+        try:
+            info = json.loads(download('https://extensions.gnome.org/extension-info/?' + query))
+            release = info.get('shell_version_map', {}).get(version)
+            if not release:
+                print(f'UNAVAILABLE: {name} for GNOME {version}')
+                continue
+            query = urllib.parse.urlencode({'version_tag': release['pk']})
+            url = 'https://extensions.gnome.org/download-extension/' + urllib.parse.quote(name, safe='') + '.shell-extension.zip?' + query
+            with tempfile.TemporaryDirectory() as temp:
+                package = Path(temp) / 'extension.zip'
+                package.write_bytes(download(url))
+                run('gnome-extensions', 'install', str(package))
+        except (OSError, ValueError, subprocess.CalledProcessError) as error:
+            print(f'UNAVAILABLE: {name}: {error}')
+    print('New GNOME extensions may require logout/login before apply can enable them.')
+
+
+def firefox_addons():
+    payloads = []
+    for item in json.loads((REPO / 'firefox/extensions.json').read_text()):
+        info = json.loads(download('https://addons.mozilla.org/api/v5/addons/addon/' + urllib.parse.quote(item['id'], safe='') + '/'))
+        file = info['current_version']['file']
+        data = download(file['url'])
+        algorithm, expected = file['hash'].split(':', 1)
+        if algorithm != 'sha256' or hashlib.sha256(data).hexdigest() != expected:
+            raise ValueError(f"Add-on checksum mismatch: {item['name']}")
+        payloads.append((DATA / 'dotfiles/firefox-addons' / (item['id'] + '.xpi'), data))
+    with locked():
+        transaction = Transaction()
+        try:
+            for path, data in payloads:
+                if path.is_file() and not path.is_symlink() and path.read_bytes() == data:
+                    continue
+                parent_safe(path)
+                transaction.file(path, content=data)
+            transaction.finish()
+        except BaseException:
+            restore(transaction.folder, force=True)
+            raise
+    print(f'Verified add-ons saved to {DATA / "dotfiles/firefox-addons"}. In Firefox about:addons, use the gear menu > Install Add-on From File and select these packages. Extension-specific settings need their exports.')
+
+
+def doctor(config):
+    issues = []
+    for component, commands in {'shell': ['zsh', 'git', 'fzf', 'fasd'], 'terminal': ['tmux', 'kitty'], 'nvim': ['nvim', 'rg', 'fzy', 'clangd', 'pyright-langserver'], 'desktop': ['rofi'], 'tasks': ['notify-send', 'systemctl', 'gdbus'], 'gnome': ['dconf', 'gnome-extensions'], 'editors': ['code', 'emacs', 'zed', 'lazygit', 'qutebrowser']}.items():
+        if component in config['components']:
+            issues += [f'Missing command: {command}' for command in commands if not shutil.which(command)]
+    for item in json.loads((REPO / 'shell/dependencies.json').read_text())['dependencies']:
+        component = 'terminal' if item['name'].startswith('tmux-') or item['name'] == 'tpm' else 'shell'
+        if component in config['components'] and not absolute(item['reference_path']).is_dir():
+            issues.append('Missing plugin: ' + item['name'])
+    if 'nvim' in config['components'] and shutil.which('nvim'):
+        version = output('nvim', '--version').splitlines()[0]
+        match = re.search(r'v(\d+)\.(\d+)', version)
+        if not match or tuple(map(int, match.groups())) < (0, 11):
+            issues.append('Neovim >=0.11 required; Ubuntu 24.04 apt neovim is too old. Install a current upstream build in ~/.local/bin.')
+        for item in json.loads((REPO / 'nvim/plugins.json').read_text()):
+            if not (DATA / 'nvim/site/pack/paqs/start' / item['repo'].split('/')[-1]).is_dir():
+                issues.append('Missing Neovim plugin: ' + item['repo'])
+    if 'gnome' in config['components'] and shutil.which('gnome-extensions'):
+        installed = set(output('gnome-extensions', 'list').splitlines())
+        for item in json.loads((REPO / 'gnome/extensions.json').read_text())['extensions']:
+            if item['enabled'] and item['uuid'] not in installed:
+                issues.append('Missing GNOME extension: ' + item['uuid'])
+    if 'tasks' in config['components'] and not (DATA / 'dotfiles-tasks/venv/bin/python').is_file():
+        issues.append('Task environment missing: run ./dotfiles tasks-setup')
+    if 'firefox' in config['components']:
+        profile = Path(config['firefox_profile'])
+        index = profile / 'extensions.json'
+        installed = {item['id'] for item in json.loads(index.read_text()).get('addons', []) if item.get('active')} if index.exists() else set()
+        for item in json.loads((REPO / 'firefox/extensions.json').read_text()):
+            if item['id'] not in installed:
+                issues.append('Firefox add-on not active: ' + item['name'])
+    for issue in issues:
+        print('NEEDS ATTENTION: ' + issue)
+    settings = gnome_plan(config) if 'gnome' in config['components'] and not any('Missing command:' in issue for issue in issues) else []
+    drift = file_plan(config, check_browser=False)
+    for path, _, _, _ in drift:
+        print(f'DRIFT: {path}')
+    print(f'{len(issues)} dependency issue(s), {len(drift)} file change(s), {len(settings)} GNOME setting change(s) needed.')
+    return bool(issues or drift or settings)
+
+
+def refresh(config):
+    if 'terminal' in config['components'] and shutil.which('tmux') and subprocess.run(['tmux', 'has-session'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode == 0:
+        result = run('tmux', 'source-file', HOME / '.tmux.conf', stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        if result.stderr:
+            raise ValueError('Configuration applied, but tmux reload reported: ' + result.stderr.strip())
+    if 'tasks' in config['components'] and shutil.which('systemctl'):
+        run('systemctl', '--user', 'daemon-reload')
+        if subprocess.run(['systemctl', '--user', 'is-active', '--quiet', 'dotfiles-tasks.service']).returncode == 0:
+            run('systemctl', '--user', 'restart', 'dotfiles-tasks.service')
+    print('Open a new terminal. Reopen editors/Firefox. Log out/in for GNOME extensions and autostart.')
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('command', choices=['setup', 'configure', 'apply', 'update', 'doctor', 'rollback', 'deps', 'tasks-setup', 'firefox-addons', 'refresh'])
+    parser.add_argument('backup', nargs='?')
+    parser.add_argument('--config', help='Machine JSON; defaults to ~/.config/dotfiles/machine.json')
+    parser.add_argument('--notebook', help='Notebook directory (setup/configure)')
+    parser.add_argument('--components', help='Comma-separated components (setup/configure)')
+    parser.add_argument('--non-interactive', action='store_true')
+    parser.add_argument('--dry-run', action='store_true')
+    parser.add_argument('--install-packages', action='store_true', help='Also install Ubuntu apt dependencies (setup/deps)')
+    parser.add_argument('--force', action='store_true', help='Allow rollback to replace edits made since apply')
+    args = parser.parse_args()
+    if (args.notebook or args.components) and args.command not in ['setup', 'configure']:
+        raise ValueError('--notebook and --components are only supported for setup/configure')
+    if args.dry_run and args.command not in ['setup', 'configure', 'apply', 'update']:
+        raise ValueError('--dry-run is supported for setup/configure/apply/update only')
+    if args.install_packages and args.command not in ['setup', 'deps']:
+        raise ValueError('--install-packages is supported for setup/deps only')
+    if args.force and args.command != 'rollback':
+        raise ValueError('--force is supported for rollback only')
+    if args.command == 'rollback':
+        if not args.backup or not re.fullmatch(r'\d{8}T\d{6}Z-[a-f0-9]{8}', args.backup):
+            raise ValueError('Provide a backup ID from ~/.local/state/dotfiles/backups')
+        with locked():
+            restore(STATE / 'backups' / args.backup, args.force)
+        return 0
+    configuring = args.command in ['setup', 'configure']
+    path, config = load_config(args, configuring)
+    if args.command == 'configure':
+        if args.dry_run:
+            print(json.dumps(config, indent=2))
+        else:
+            with locked():
+                transaction = Transaction()
+                transaction.file(path, content=json.dumps(config, indent=2) + '\n')
+                transaction.finish()
+        return 0
+    if args.command == 'update':
+        if output('git', '-C', REPO, 'status', '--porcelain'):
+            raise ValueError('Repository has local changes; commit or stash them before updating')
+        upstream = output('git', '-C', REPO, 'rev-parse', '--abbrev-ref', '@{upstream}')
+        if args.dry_run:
+            print(f'Would fetch and fast-forward {upstream}, then apply. Preview below uses the current checkout.')
+        else:
+            previous = output('git', '-C', REPO, 'rev-parse', 'HEAD')
+            run('git', '-C', REPO, 'pull', '--ff-only')
+            changed = set(output('git', '-C', REPO, 'diff', '--name-only', previous, 'HEAD').splitlines())
+            dependency_files = {'nvim/plugins.json', 'shell/dependencies.json', 'config/downloads.json', 'code/extensions.txt', 'gnome/extensions.json', 'firefox/extensions.json'}
+            if changed & dependency_files:
+                run(sys.executable, REPO / 'dotfiles', 'deps', '--config', path)
+            if 'config/ubuntu-packages.txt' in changed:
+                print('System package list changed; run ./dotfiles deps --install-packages if doctor reports missing tools.')
+            # Re-exec the updated implementation; do not apply using stale code/config.
+            os.execv(sys.executable, [sys.executable, str(REPO / 'dotfiles'), 'apply', '--config', str(path)])
+    if args.command in ['setup', 'apply', 'update']:
+        if args.command == 'setup' and args.install_packages and not args.dry_run:
+            file_plan(config)  # Preflight conflicts and closed Firefox before package changes.
+            dependencies(config, packages=True)
+        write = (path, json.dumps(config, indent=2) + '\n') if configuring else None
+        apply(config, args.dry_run, write)
+        if args.command == 'setup' and args.install_packages and not args.dry_run and 'tasks' in config['components']:
+            run('bash', REPO / 'tasks/install.sh', env=dict(os.environ, TASKS_DIR=config.get('tasks_dir', str(DATA / 'tasks'))))
+        if not args.dry_run:
+            refresh(config)
+        return 0
+    if args.command == 'doctor':
+        return int(doctor(config))
+    if args.command == 'deps':
+        dependencies(config, args.install_packages)
+    elif args.command == 'firefox-addons':
+        firefox_addons()
+    elif args.command == 'tasks-setup':
+        env = dict(os.environ, TASKS_DIR=config.get('tasks_dir', str(DATA / 'tasks')))
+        run('bash', REPO / 'tasks/install.sh', env=env)
+    elif args.command == 'refresh':
+        refresh(config)
+    return 0
+
+
+if __name__ == '__main__':
+    try:
+        sys.exit(main())
+    except (OSError, ValueError, KeyError, subprocess.CalledProcessError) as error:
+        print(f'Error: {error}', file=sys.stderr)
+        sys.exit(1)
