@@ -1,0 +1,75 @@
+[arcmenu]
+arcmenu-hotkey=['Super_L']
+arcmenu-hotkey-overlay-key-enabled=true
+icon-size-apps=-1
+icon-size-buttons=-1
+icon-size-categories=-1
+icon-size-misc=-1
+icon-size-shortcuts=-1
+menu-button-appearance='Icon'
+search-entry-border-radius=(true, 25)
+
+[auto-move-windows]
+application-list=['obsidian_obsidian.desktop:5', 'kitty.desktop:1', 'firefox_firefox.desktop:2', 'teams-for-linux_teams-for-linux.desktop:3', 'spotify_spotify.desktop:4', 'zotero.desktop:5']
+
+[dash-to-dock]
+dash-max-icon-size=40
+dock-fixed=false
+dock-position='BOTTOM'
+extend-height=false
+show-mounts=true
+show-trash=false
+
+[ding]
+check-x11wayland=true
+icon-size='standard'
+show-home=true
+
+[pop-shell]
+activate-launcher=@as []
+focus-down=['<Super>j']
+focus-left=['<Super>h']
+focus-right=['<Super>l']
+focus-up=['<Super>k']
+gap-inner=uint32 0
+gap-outer=uint32 0
+management-orientation=@as []
+pop-monitor-down=@as []
+pop-monitor-left=@as []
+pop-monitor-right=@as []
+pop-monitor-up=@as []
+pop-workspace-down=@as []
+pop-workspace-up=@as []
+tile-accept=@as []
+tile-by-default=false
+tile-enter=@as []
+tile-move-down=@as []
+tile-move-down-global=@as []
+tile-move-left=@as []
+tile-move-left-global=@as []
+tile-move-right=@as []
+tile-move-right-global=@as []
+tile-move-up=@as []
+tile-move-up-global=@as []
+tile-orientation=@as []
+tile-reject=@as []
+tile-resize-down=@as []
+tile-resize-left=@as []
+tile-resize-right=@as []
+tile-resize-up=@as []
+tile-swap-down=@as []
+tile-swap-left=@as []
+tile-swap-right=@as []
+tile-swap-up=@as []
+toggle-floating=@as []
+toggle-stacking=@as []
+toggle-stacking-global=@as []
+toggle-tiling=@as []
+
+[tiling-assistant]
+active-window-hint-color='rgb(211,70,21)'
+restore-window=['<Alt><Shift><Super>Down']
+tile-left-half=['<Alt><Shift><Super>Left', '<Super>KP_4']
+tile-maximize=['<Alt><Shift><Super>Up', '<Super>KP_5']
+tile-right-half=['<Alt><Shift><Super>Right', '<Super>KP_6']
+tiling-popup-all-workspace=true

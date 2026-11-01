@@ -1,0 +1,33 @@
+{
+    "workbench.colorTheme": "GitHub Dark",
+    "plantuml.jar": "/usr/share/plantuml/plantuml.jar",
+
+    "vim.leader": "<space>",
+    "vim.hlsearch": true,
+    "vim.useSystemClipboard": true,
+    "vim.ignorecase": true,
+    "vim.smartcase": true,
+    "vim.easymotion": false,
+    "vim.handleKeys": { "<C-p>": false },
+
+    "extensions.autoUpdate": false,
+    "telemetry.telemetryLevel": "off",
+    "workbench.enableExperiments": false,
+    "workbench.settings.enableNaturalLanguageSearch": false,
+    "editor.minimap.enabled": false,
+    "breadcrumbs.enabled": false,
+    "git.autofetch": false,
+    "files.watcherExclude": {
+        "**/node_modules/**": true,
+        "**/.git/**": true
+    },
+    "workbench.secondarySideBar.defaultVisibility": "hidden",
+    "claudeCode.preferredLocation": "panel",
+    "remote.SSH.connectTimeout": 90,
+    "editor.fontSize": 16,
+    "workbench.iconTheme": "vs-minimal",
+    "workbench.tips.enabled": false,
+    "workbench.activityBar.location": "top",
+    "window.menuBarVisibility": "compact",
+    "claudeCode.hideOnboarding": true
+}

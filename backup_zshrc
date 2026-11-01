@@ -174,6 +174,8 @@ export FZF_DEFAULT_OPTS='--height 40% --reverse --border --multi --info=inline'
 # free Ctrl-S / Ctrl-Q from XON/XOFF flow control so they reach fzf/nvim
 [[ -t 0 ]] && stty -ixon 2>/dev/null
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
+# Use the fzf file picker with Ctrl-F in vi insert mode (Ctrl-T remains available).
+bindkey -M viins "^F" fzf-file-widget
 
 # ---------------------------------------------------------------------------
 # Machine-specific settings: PATHs and env live in machines/<hostname>.zsh

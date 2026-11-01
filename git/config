@@ -1,0 +1,8 @@
+[difftool "meld"]
+cmd = meld \"$LOCAL\" \"$REMOTE\"
+
+[difftool]
+prompt = false
+
+[diff]
+tool = meld

@@ -60,7 +60,6 @@ end
 -- ╰────────────────────────────────────────────────────────────────────────────╯
 require('paq') {
   'savq/paq-nvim';
-  'stevearc/oil.nvim';
   'ishan9299/modus-theme-vim';
   'sainnhe/gruvbox-material';
   'rebelot/kanagawa.nvim';

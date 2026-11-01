@@ -1,0 +1,4 @@
+/* Hide Firefox horizontal tabs. */
+#TabsToolbar {
+  visibility: collapse !important;
+}

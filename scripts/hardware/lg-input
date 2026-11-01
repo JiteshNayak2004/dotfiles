@@ -1,0 +1,82 @@
+#!/usr/bin/env python3
+"""Switch a recent LG monitor input through LG's alternate DDC channel."""
+
+import argparse
+import re
+import shutil
+import subprocess
+
+
+INPUT_VALUES = {
+    "hdmi1": 0x90,
+    "hdmi2": 0x91,
+    "dp": 0xD0,
+    "usbc": 0xD1,
+}
+
+
+def packet_for(input_name):
+    try:
+        value = INPUT_VALUES[input_name]
+    except KeyError as error:
+        raise ValueError(f"unknown input: {input_name}") from error
+
+    packet = [0x50, 0x84, 0x03, 0xF4, 0x00, value]
+    checksum = 0x6E
+    for byte in packet:
+        checksum ^= byte
+    return packet + [checksum]
+
+
+def find_lg_bus(detection):
+    buses = []
+    for block in re.split(r"(?=^Display \d+)", detection, flags=re.MULTILINE):
+        if not re.search(r"Mfg id:\s+GSM\b", block, flags=re.IGNORECASE):
+            continue
+        match = re.search(r"/dev/i2c-(\d+)", block)
+        if match:
+            buses.append(match.group(1))
+
+    if not buses:
+        raise RuntimeError("no LG display found by ddcutil")
+    if len(buses) > 1:
+        raise RuntimeError("multiple LG displays found; refusing an ambiguous write")
+    return buses[0]
+
+
+def detect_lg_bus():
+    result = subprocess.run(
+        ["ddcutil", "detect", "--verbose"],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    return find_lg_bus(result.stdout + result.stderr)
+
+
+def switch_input(input_name, dry_run=False):
+    bus = detect_lg_bus()
+    i2ctransfer = shutil.which("i2ctransfer")
+    if not i2ctransfer:
+        raise RuntimeError("i2ctransfer not found; install the i2c-tools package")
+
+    command = [i2ctransfer, "-y", bus, "w7@0x37"]
+    command.extend(f"0x{byte:02x}" for byte in packet_for(input_name))
+    if dry_run:
+        print(" ".join(command))
+        return
+    subprocess.run(command, check=True)
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("input", choices=INPUT_VALUES)
+    parser.add_argument(
+        "--dry-run", action="store_true", help="show the validated I2C command only"
+    )
+    args = parser.parse_args()
+    switch_input(args.input, args.dry_run)
+
+
+if __name__ == "__main__":
+    main()

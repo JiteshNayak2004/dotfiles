@@ -1,0 +1,38 @@
+[/]
+custom-keybindings=['/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0/', '/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom1/', '/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom2/', '/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom3/', '/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom4/', '/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom5/']
+next=['F8']
+play=['F7']
+previous=['F6']
+screensaver=@as []
+volume-down=['F10']
+volume-up=['F11']
+
+[custom-keybindings/custom0]
+binding='<Super>n'
+command='firefox'
+name='firefox'
+
+[custom-keybindings/custom1]
+binding='<Super>Return'
+command='kitty'
+name='term'
+
+[custom-keybindings/custom2]
+binding='<Super><Alt>2'
+command='/home/jitesh/.local/bin/lg-input hdmi2'
+name='Switch monitor to laptop 2'
+
+[custom-keybindings/custom3]
+binding='<Alt>space'
+command='rofi -show combi -modes combi -combi-modes window,drun'
+name='Rofi launcher'
+
+[custom-keybindings/custom4]
+binding='<Super>p'
+command='/home/jitesh/.local/bin/rofi-powermenu'
+name='Rofi power menu'
+
+[custom-keybindings/custom5]
+binding=''
+command='rofi -show combi -modes combi -combi-modes window,drun'
+name='Rofi launcher (Ctrl+Space)'

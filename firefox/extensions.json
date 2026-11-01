@@ -1,0 +1,38 @@
+[
+  {
+    "id": "addon@darkreader.org",
+    "name": "Dark Reader",
+    "version": "4.9.134",
+    "enabled": true
+  },
+  {
+    "id": "chrome-gnome-shell@gnome.org",
+    "name": "GNOME Shell integration",
+    "version": "12.1",
+    "enabled": true
+  },
+  {
+    "id": "firefox@tampermonkey.net",
+    "name": "Tampermonkey",
+    "version": "5.5.0",
+    "enabled": true
+  },
+  {
+    "id": "uBlock0@raymondhill.net",
+    "name": "uBlock Origin",
+    "version": "1.75.0",
+    "enabled": true
+  },
+  {
+    "id": "{3c078156-979c-498b-8990-85f7987dd929}",
+    "name": "Sidebery",
+    "version": "5.6.1",
+    "enabled": true
+  },
+  {
+    "id": "{d7742d87-e61d-4b78-b8a1-b469842139fa}",
+    "name": "Vimium",
+    "version": "2.4.2",
+    "enabled": true
+  }
+]

@@ -1,0 +1,156 @@
+#!/usr/bin/python3
+"""Open the existing Rofi launcher after two isolated Ctrl taps (X11)."""
+import ctypes as C
+import fcntl
+import os
+import subprocess
+import sys
+
+
+class Taps:
+    def __init__(self, controls):
+        self.controls = set(controls)
+        self.down = set()
+        self.started = None
+        self.last = None
+
+    def event(self, key, pressed, now):
+        if pressed:
+            if key in self.down:  # Ignore keyboard repeat.
+                return False
+            alone = not self.down
+            self.down.add(key)
+            if key in self.controls and alone:
+                self.started = now
+            else:
+                self.started = self.last = None
+            return False
+        self.down.discard(key)
+        if key not in self.controls or self.started is None:
+            return False
+        short = ((now - self.started) & 0xffffffff) <= 250
+        self.started = None
+        if not short or self.down:
+            self.last = None
+            return False
+        if self.last is not None and ((now - self.last) & 0xffffffff) <= 350:
+            self.last = None
+            return True
+        self.last = now
+        return False
+
+
+def self_test():
+    def check(events, expected):
+        taps = Taps((37, 66, 105))
+        actual = sum(taps.event(*e) for e in events)
+        assert actual == expected, (events, actual, expected)
+    check([(37, 1, 0), (37, 0, 60)], 0)
+    check([(37, 1, 0), (37, 0, 60), (37, 1, 180), (37, 0, 240)], 1)
+    check([(105, 1, 0), (105, 0, 60), (105, 1, 180), (105, 0, 240)], 1)
+    check([(37, 1, 0), (37, 0, 60), (105, 1, 180), (105, 0, 240)], 1)
+    check([(37, 1, 0), (54, 1, 30), (54, 0, 50), (37, 0, 60), (37, 1, 180), (37, 0, 240)], 0)
+    check([(37, 1, 0), (37, 1, 100), (37, 0, 500), (37, 1, 600), (37, 0, 650)], 0)
+    check([(37, 1, 0), (37, 0, 60), (37, 1, 600), (37, 0, 650)], 0)
+    check([(50, 1, 0), (37, 1, 20), (37, 0, 50), (50, 0, 60), (37, 1, 180), (37, 0, 240)], 0)
+    check([(37, 1, 0), (37, 0, 60), (37, 1, 100), (37, 0, 150), (37, 1, 200), (37, 0, 250)], 1)
+    check([(66, 1, 0), (66, 0, 60), (66, 1, 180), (66, 0, 240)], 1)
+    print('PASS: 10 tap, remapped Ctrl, timing, repeat, and shortcut checks')
+
+
+def main():
+    runtime = os.environ.get('XDG_RUNTIME_DIR', '/tmp')
+    lock = open(f'{runtime}/rofi-double-ctrl-{os.getuid()}.lock', 'w')
+    try:
+        fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except BlockingIOError:
+        return
+    x = C.CDLL('libX11.so.6')
+    xi = C.CDLL('libXi.so.6')
+    ptr, integer, ulong = C.c_void_p, C.c_int, C.c_ulong
+    common = [('type', integer), ('serial', ulong), ('send_event', integer),
+              ('display', ptr), ('extension', integer), ('evtype', integer)]
+
+    class Cookie(C.Structure):
+        _fields_ = common + [('cookie', C.c_uint), ('data', ptr)]
+
+    class Event(C.Union):
+        _fields_ = [('cookie', Cookie), ('pad', C.c_long * 24)]
+
+    class Raw(C.Structure):
+        _fields_ = common + [('time', ulong), ('deviceid', integer),
+                            ('sourceid', integer), ('detail', integer), ('flags', integer)]
+
+    class Mask(C.Structure):
+        _fields_ = [('deviceid', integer), ('mask_len', integer), ('mask', C.POINTER(C.c_ubyte))]
+
+    class ModifierMap(C.Structure):
+        _fields_ = [('max_keypermod', integer), ('modifiermap', C.POINTER(C.c_ubyte))]
+
+    def bind(lib, name, args, result=integer):
+        fn = getattr(lib, name)
+        fn.argtypes, fn.restype = args, result
+        return fn
+    bind(x, 'XOpenDisplay', [C.c_char_p], ptr)
+    bind(x, 'XDefaultRootWindow', [ptr], ulong)
+    bind(x, 'XQueryExtension', [ptr, C.c_char_p, C.POINTER(integer), C.POINTER(integer), C.POINTER(integer)])
+    bind(x, 'XQueryKeymap', [ptr, ptr])
+    bind(x, 'XGetModifierMapping', [ptr], C.POINTER(ModifierMap))
+    bind(x, 'XFreeModifiermap', [C.POINTER(ModifierMap)])
+    bind(x, 'XNextEvent', [ptr, C.POINTER(Event)])
+    bind(x, 'XGetEventData', [ptr, C.POINTER(Cookie)])
+    bind(x, 'XFreeEventData', [ptr, C.POINTER(Cookie)], None)
+    bind(x, 'XFlush', [ptr])
+    bind(xi, 'XIQueryVersion', [ptr, C.POINTER(integer), C.POINTER(integer)])
+    bind(xi, 'XISelectEvents', [ptr, ulong, C.POINTER(Mask), integer])
+    display = x.XOpenDisplay(None)
+    if not display:
+        raise SystemExit('Cannot open X11 display')
+    opcode, unused1, unused2 = integer(), integer(), integer()
+    if not x.XQueryExtension(display, b'XInputExtension', C.byref(opcode), C.byref(unused1), C.byref(unused2)):
+        raise SystemExit('XInput extension unavailable')
+    # XI 2.1 keeps raw events flowing while Rofi or menus grab the keyboard.
+    major, minor = integer(2), integer(1)
+    if xi.XIQueryVersion(display, C.byref(major), C.byref(minor)):
+        raise SystemExit('XInput2 unavailable')
+    bits = (C.c_ubyte * 3)()
+    for kind in (13, 14, 15):  # Raw key press/release and mouse-button press.
+        bits[kind // 8] |= 1 << (kind % 8)
+    mask = Mask(1, len(bits), bits)  # XIAllMasterDevices, avoids duplicate slave events.
+    xi.XISelectEvents(display, x.XDefaultRootWindow(display), C.byref(mask), 1)
+    modifiers = x.XGetModifierMapping(display)
+    if not modifiers:
+        raise SystemExit('Cannot read Ctrl modifier mapping')
+    width = modifiers.contents.max_keypermod
+    controls = {modifiers.contents.modifiermap[i] for i in range(2 * width, 3 * width)} - {0}
+    x.XFreeModifiermap(modifiers)
+    taps = Taps(controls)
+    keys = (C.c_ubyte * 32)()
+    x.XQueryKeymap(display, keys)
+    taps.down = {key for key in range(256) if keys[key // 8] & (1 << (key % 8))}
+    x.XFlush(display)
+    event = Event()
+    print('Listening for double Ctrl; keycodes:', sorted(controls), flush=True)
+    while True:
+        x.XNextEvent(display, C.byref(event))
+        cookie = event.cookie
+        if cookie.type != 35 or cookie.extension != opcode.value:
+            continue
+        if not x.XGetEventData(display, C.byref(cookie)):
+            continue
+        try:
+            raw = C.cast(cookie.data, C.POINTER(Raw)).contents
+            if cookie.evtype == 15:
+                taps.started = taps.last = None
+            elif taps.event(raw.detail, cookie.evtype == 13, raw.time):
+                subprocess.Popen(['/usr/bin/rofi', '-show', 'combi', '-modes', 'combi',
+                                  '-combi-modes', 'window,drun'], start_new_session=True)
+        finally:
+            x.XFreeEventData(display, C.byref(cookie))
+
+
+if __name__ == '__main__':
+    if '--self-test' in sys.argv:
+        self_test()
+    else:
+        main()

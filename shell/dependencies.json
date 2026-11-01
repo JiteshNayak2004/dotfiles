@@ -1,0 +1,50 @@
+{
+  "note": "Observed plugin revisions, not an installation lockfile. Oh My Zsh also provides the git, virtualenv, and fzf plugins configured in backup_zshrc.",
+  "dependencies": [
+    {
+      "name": "oh-my-zsh",
+      "reference_path": "~/.oh-my-zsh",
+      "observed_revision": "6adfef3a8b25ca5ccf429bb87e10547ed444eaa1"
+    },
+    {
+      "name": "powerlevel10k",
+      "reference_path": "~/applications/powerlevel10k",
+      "observed_revision": "7178d3b275fbf5796c30d169873253af26b89942"
+    },
+    {
+      "name": "fzf-tab",
+      "reference_path": "~/.oh-my-zsh/custom/plugins/fzf-tab",
+      "observed_revision": "24105b15714bfec37989ed5c5b6e60f572253019"
+    },
+    {
+      "name": "zsh-autosuggestions",
+      "reference_path": "~/.oh-my-zsh/custom/plugins/zsh-autosuggestions",
+      "observed_revision": "85919cd1ffa7d2d5412f6d3fe437ebdbeeec4fc5"
+    },
+    {
+      "name": "zsh-syntax-highlighting",
+      "reference_path": "~/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting",
+      "observed_revision": "5eb677bb0fa9a3e60f0eff031dc13926e093df92"
+    },
+    {
+      "name": "tpm",
+      "reference_path": "~/.tmux/plugins/tpm",
+      "observed_revision": "99469c4a9b1ccf77fade25842dc7bafbc8ce9946"
+    },
+    {
+      "name": "tmux-sensible",
+      "reference_path": "~/.tmux/plugins/tmux-sensible",
+      "observed_revision": "25cb91f42d020f675bb0a2ce3fbd3a5d96119efa"
+    },
+    {
+      "name": "tmux-resurrect",
+      "reference_path": "~/.tmux/plugins/tmux-resurrect",
+      "observed_revision": "cff343cf9e81983d3da0c8562b01616f12e8d548"
+    },
+    {
+      "name": "tmux-continuum",
+      "reference_path": "~/.tmux/plugins/tmux-continuum",
+      "observed_revision": "0698e8f4b17d6454c71bf5212895ec055c578da0"
+    }
+  ]
+}

@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Rofi double Ctrl
+Comment=Open Rofi by tapping Ctrl twice
+Exec=/home/jitesh/.local/bin/rofi-double-ctrl
+Terminal=false
+X-GNOME-Autostart-enabled=true

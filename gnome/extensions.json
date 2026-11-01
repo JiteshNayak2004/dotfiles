@@ -1,0 +1,208 @@
+{
+  "baseline": "Ubuntu 24.04 / GNOME Shell 46",
+  "extensions": [
+    {
+      "uuid": "arcmenu@arcmenu.com",
+      "name": "ArcMenu",
+      "version": 74,
+      "shell_versions": [
+        "45",
+        "46",
+        "47",
+        "48",
+        "49",
+        "50",
+        "51"
+      ],
+      "origin": "user",
+      "enabled": true,
+      "installed": true
+    },
+    {
+      "uuid": "auto-move-windows@gnome-shell-extensions.gcampax.github.com",
+      "name": "Auto Move Windows",
+      "version": 59,
+      "shell_versions": [
+        "46"
+      ],
+      "origin": "user",
+      "enabled": true,
+      "installed": true
+    },
+    {
+      "uuid": "bluetooth-battery-monitor@v8v88v8v88.com",
+      "name": "Bluetooth Battery Monitor",
+      "version": 11,
+      "shell_versions": [
+        "45",
+        "46",
+        "47",
+        "48",
+        "49",
+        "50",
+        "51"
+      ],
+      "origin": "user",
+      "enabled": true,
+      "installed": true
+    },
+    {
+      "uuid": "bluetooth-quick-connect@bjarosze.gmail.com",
+      "name": "Bluetooth Quick Connect",
+      "version": 55,
+      "shell_versions": [
+        "45",
+        "46",
+        "47",
+        "48",
+        "49",
+        "50"
+      ],
+      "origin": "user",
+      "enabled": true,
+      "installed": true
+    },
+    {
+      "uuid": "ding@rastersoft.com",
+      "name": "Desktop Icons NG (DING)",
+      "version": null,
+      "shell_versions": [
+        "45",
+        "46"
+      ],
+      "origin": "system",
+      "enabled": false,
+      "installed": true
+    },
+    {
+      "uuid": "disable-workspace-animation@ethnarque",
+      "name": "Disable Workspace Animation",
+      "version": 8,
+      "shell_versions": [
+        "45",
+        "46",
+        "47",
+        "48",
+        "49"
+      ],
+      "origin": "user",
+      "enabled": true,
+      "installed": true
+    },
+    {
+      "uuid": "focus-changer@heartmire",
+      "name": "Focus changer",
+      "version": 27,
+      "shell_versions": [
+        "45",
+        "46",
+        "47",
+        "48",
+        "49",
+        "50",
+        "51"
+      ],
+      "origin": "user",
+      "enabled": true,
+      "installed": true
+    },
+    {
+      "uuid": "focus@scaryrawr.github.io",
+      "enabled": true,
+      "installed": false
+    },
+    {
+      "uuid": "gnome-ddc-brightness-contrast@leoleguizamon97.github.io",
+      "name": "Monitor DDC Brightness/Contrast",
+      "version": 3,
+      "shell_versions": [
+        "45",
+        "46",
+        "47",
+        "48"
+      ],
+      "origin": "user",
+      "enabled": true,
+      "installed": true
+    },
+    {
+      "uuid": "improved-workspace-indicator@michaelaquilina.github.io",
+      "name": "Improved Workspace Indicator",
+      "version": 31,
+      "shell_versions": [
+        "45",
+        "46",
+        "47",
+        "48",
+        "49",
+        "50"
+      ],
+      "origin": "user",
+      "enabled": true,
+      "installed": true
+    },
+    {
+      "uuid": "no-overview@fthx",
+      "name": "No overview at start-up",
+      "version": 17,
+      "shell_versions": [
+        "46"
+      ],
+      "origin": "user",
+      "enabled": true,
+      "installed": true
+    },
+    {
+      "uuid": "tiling-assistant@ubuntu.com",
+      "name": "Ubuntu Tiling Assistant",
+      "version": 46,
+      "shell_versions": [
+        "45",
+        "46"
+      ],
+      "origin": "system",
+      "enabled": false,
+      "installed": true
+    },
+    {
+      "uuid": "ubuntu-appindicators@ubuntu.com",
+      "name": "Ubuntu AppIndicators",
+      "version": null,
+      "shell_versions": [
+        "45",
+        "46"
+      ],
+      "origin": "system",
+      "enabled": false,
+      "installed": true
+    },
+    {
+      "uuid": "ubuntu-dock@ubuntu.com",
+      "name": "Ubuntu Dock",
+      "version": 90,
+      "shell_versions": [
+        "45",
+        "46"
+      ],
+      "origin": "system",
+      "enabled": true,
+      "installed": true
+    },
+    {
+      "uuid": "wintile@nowsci.com",
+      "name": "WinTile",
+      "version": 25,
+      "shell_versions": [
+        "45",
+        "46",
+        "47",
+        "48",
+        "49",
+        "50"
+      ],
+      "origin": "user",
+      "enabled": true,
+      "installed": true
+    }
+  ]
+}

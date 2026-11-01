@@ -1,0 +1,20 @@
+# Machine-local configuration and credentials
+/local/
+.env
+.env.*
+!.env.example
+**/dotfiles-secrets.zsh
+*.lic
+*.license
+*.pem
+*.key
+
+# Personal state and generated artifacts
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.DS_Store
+/firefox/profile/
+/firefox/private-exports/
+/gnome/backups/

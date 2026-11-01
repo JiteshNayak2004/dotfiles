@@ -1,0 +1,10 @@
+[/]
+dynamic-workspaces=false
+edge-tiling=false
+experimental-features=['scale-monitor-framebuffer']
+overlay-key='Super_L'
+
+[keybindings]
+switch-monitor=['XF86Display']
+toggle-tiled-left=['<Control><Shift><Super>Left']
+toggle-tiled-right=['<Control><Shift><Super>Right']

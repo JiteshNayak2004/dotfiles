@@ -1,0 +1,3 @@
+[/]
+sources=[('xkb', 'us')]
+xkb-options=['ctrl:nocaps']
