@@ -1,13 +1,3 @@
-# Resolve the checkout through the live symlink; never depend on a fixed location.
-_zsh_self="${(%):-%x}"
-[[ -L "$_zsh_self" ]] && _zsh_self="$(readlink -f "$_zsh_self")"
-export DOTFILES_REPO="${_zsh_self:h}"
-source "$DOTFILES_REPO/machines/default.zsh"
-_dotfiles_config="${XDG_CONFIG_HOME:-$HOME/.config}/dotfiles"
-[[ ! -f "$_dotfiles_config/env.zsh" ]] || source "$_dotfiles_config/env.zsh"
-[[ ! -f "$_dotfiles_config/local.zsh" ]] || source "$_dotfiles_config/local.zsh"
-unset _zsh_self _dotfiles_config
-
 # Enable Powerlevel10k instant prompt
 if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
   source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
@@ -33,28 +23,37 @@ ZSH_THEME="robbyrussell"
 # POWERLEVEL9K_COLOR_SCHEME="light"
 
 # Modus Dark Colorscheme (Active)
-# POWERLEVEL9K_MODE is set per machine in machines/<hostname>.zsh
+POWERLEVEL9K_MODE="nerdfont-complete"
 POWERLEVEL9K_LEFT_PROMPT_ELEMENTS=(os_icon context dir newline status)
 POWERLEVEL9K_RIGHT_PROMPT_ELEMENTS=(vcs virtualenv)
 POWERLEVEL9K_SHOW_CHANGESET=true
 POWERLEVEL9K_SHORTEN_DIR_LENGTH=2
 POWERLEVEL9K_COLOR_SCHEME="dark"
 
-[[ ! -f "$HOME/applications/powerlevel10k/powerlevel10k.zsh-theme" ]] || source "$HOME/applications/powerlevel10k/powerlevel10k.zsh-theme"
+source ~/applications/powerlevel10k/powerlevel10k.zsh-theme
 
 # Plugins
 plugins=(
   git
   virtualenv
-  fzf
-  fzf-tab
-  zsh-autosuggestions
   zsh-syntax-highlighting
+  zsh-autosuggestions
 )
-[[ ! -f "$ZSH/oh-my-zsh.sh" ]] || source "$ZSH/oh-my-zsh.sh"
-# Let fzf-tab display completion candidates instead of Oh My Zsh's menu.
-zstyle ':completion:*:*:*:*:*' menu no
-zstyle ':completion:*:descriptions' format '[%d]'
+source $ZSH/oh-my-zsh.sh
+
+# Environment variables
+export PATH="$PATH:/home/jitesh/riscv/bin"
+# export PATH="$PATH:/home/jitesh/riscv_binaries/ubuntu-toolchain-az/riscv_toolchain_ubuntu/bin"
+# export PATH="$PATH:/home/jitesh/Desktop/work/incore/misc/bsc/bsc_install/bin"
+export PATH="$PATH:/home/jitesh/Desktop/work/incore/misc/incore_bsv/bsc/bsc-main/inst/bin"
+export PATH="$PATH:/usr/bin/iverilog"
+export PATH="$PATH:/home/jitesh/binaries"
+export PATH="$PATH:/usr/bin/verilator"
+export PATH="$PATH:/usr/local/bin/ctags"
+export PATH="$PATH:/opt/nvim-linux64/bin"
+export PATH="$PATH:/home/jitesh/.local/bin"
+export PATH="$PATH:/home/jitesh/applications/MentorGraphics_QuestaSim/install/questasim/linux_x86_64"
+export LM_LICENSE_FILE="/home/jitesh/applications/MentorGraphics_QuestaSim/install/license.dat"
 
 # Vim mode in Zsh
 bindkey -v
@@ -63,12 +62,12 @@ export KEYTIMEOUT=1
 # Zoxide initialization
 # eval "$(zoxide init zsh)"
 # Initialize fasd
-command -v fasd >/dev/null && eval "$(fasd --init auto)"
+eval "$(fasd --init auto)"
 
 # Key bindings
 zle -N accept-current-completion
 bindkey '^l' autosuggest-accept
-# fuzzy file search
+# fuzzy file search 
 
 # Aliases
 # tmux
@@ -77,16 +76,11 @@ alias tls='tmux -u ls'
 alias ta='tmux -u attach -t'
 alias tk='tmux -u kill-session -t'
 alias t='tmux -u'
-alias spotify='spotify --audio-api=pulseaudio'
-command -v batcat >/dev/null && alias cat='batcat'
-command -v fdfind >/dev/null && alias fd='fdfind'
 # virtual Environment
 export pyvirtualenv=~/pyvirtualenv
-# Python used to create virtual environments (overridable per machine)
-export VENV_PYTHON="${VENV_PYTHON:-python3}"
 # Create a virtual environment
 makevenv() {
-    $VENV_PYTHON -m venv "$pyvirtualenv/$1"
+    python3 -m venv "$pyvirtualenv/$1"
     echo "Virtual environment '$1' created at $pyvirtualenv/$1"
 }
 
@@ -117,28 +111,22 @@ alias gs="git status"
 alias gc="git commit"
 alias ga="git add ."
 alias gp="git push origin main"
-alias l="ls"
-alias vf='sf -e nvim' # quick opening files with vim
-alias v='nvim' # quick opening files with vim
-alias o='a -e xdg-open' # quick opening files with xdg-open
+alias v="nvim"
 alias py="python3"
 alias c="clear"
 alias scratchpad="nvim ~/scratchpad"
 alias rm="rm -ir"
 alias llm="python3 ~/scripts/llm.py"
-if [[ ${XDG_SESSION_TYPE:-} == wayland ]]; then
-  alias copy='wl-copy'
-else
-  alias copy='xclip -sel clip'
-fi
+alias copy="xclip -sel clip"
 alias displaymanager="sudo vim /etc/gdm3/custom.conf"
-config_update() { "$DOTFILES_REPO/dotfiles" update "$@"; }
+alias config_update="~/update.sh"
 alias lg="lazygit"
-
-alias hs='print -z -- "$(fc -rl 1 | fzf | awk '\''{$1=""; sub(/^ /,""); print}'\'')"'
 
 # conda setup
 alias condasetup='source ~/miniconda3/etc/profile.d/conda.sh && conda activate base'
+
+
+
 
 # Conditional prompt customization
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
@@ -168,32 +156,6 @@ zle -N zle-line-init
 echo -ne '\e[5 q' # Use beam shape cursor on startup.
 preexec() { echo -ne '\e[5 q' ;} # Use beam shape cursor for each new prompt.
 
-# Ensure fzf keybindings work in Vi mode
-bindkey '^R' fzf-history-widget
 
-# nvm loader
-export NVM_DIR="$HOME/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
-[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
 
-# opencode
-export PATH="$HOME/.opencode/bin:$PATH"
 
-# fzf terminal integration (prefers ~/.fzf/bin 0.67 over system 0.29)
-export PATH="$HOME/.fzf/bin:$PATH"
-export FZF_DEFAULT_COMMAND='fd --type f --hidden --follow --exclude .git 2>/dev/null || rg --files --hidden -g "!.git" 2>/dev/null'
-export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
-export FZF_ALT_C_COMMAND='fd --type d --hidden --follow --exclude .git 2>/dev/null || find . -type d 2>/dev/null'
-export FZF_DEFAULT_OPTS='--height 40% --reverse --border --multi --info=inline'
-# free Ctrl-S / Ctrl-Q from XON/XOFF flow control so they reach fzf/nvim
-[[ -t 0 ]] && stty -ixon 2>/dev/null
-if [[ -f ~/.fzf.zsh ]]; then
-  source ~/.fzf.zsh
-elif [[ -f /usr/share/doc/fzf/examples/key-bindings.zsh ]]; then
-  source /usr/share/doc/fzf/examples/key-bindings.zsh
-fi
-# Use the fzf file picker with Ctrl-F in vi insert mode (Ctrl-T remains available).
-bindkey -M viins "^F" fzf-file-widget
-
-# Credentials remain machine-local and are loaded last.
-[ -f "$HOME/.config/zsh/dotfiles-secrets.zsh" ] && source "$HOME/.config/zsh/dotfiles-secrets.zsh"
